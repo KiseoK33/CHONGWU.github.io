@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>萌宠生活 - 宠物服务</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif; background: #f5f5f5; max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; overflow-x: hidden; }
+
+  /* ===== 状态栏 ===== */
+  .status-bar { height: 20px; background: #fff; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-size: 11px; color: #333; }
+  .status-bar .time { font-weight: 600; }
+  .status-bar .icons { display: flex; gap: 4px; align-items: center; }
+
+  /* ===== 顶部头部 ===== */
+  .app-header { background: linear-gradient(135deg, #9333ea 0%, #c026d3 100%); padding: 12px 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(147,51,234,0.3); }
+  .header-search { display: flex; align-items: center; gap: 10px; }
+  .location-btn { display: flex; align-items: center; gap: 4px; color: #fff; font-size: 14px; font-weight: 600; flex-shrink: 0; cursor: pointer; }
+  .location-btn .arrow { font-size: 10px; opacity: 0.8; }
+  .search-box { flex: 1; background: rgba(255,255,255,0.95); border-radius: 20px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+  .search-box input { border: none; outline: none; flex: 1; font-size: 14px; color: #333; background: transparent; }
+  .search-box input::placeholder { color: #999; }
+  .search-icon { color: #9333ea; font-size: 15px; }
+  .msg-btn { color: #fff; font-size: 20px; flex-shrink: 0; position: relative; cursor: pointer; }
+  .msg-dot { width: 8px; height: 8px; background: #fff; border-radius: 50%; position: absolute; top: -2px; right: -2px; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:0.7} }
+
+  /* ===== 页面容器 ===== */
+  .page { display: none; padding-bottom: 70px; }
+  .page.active { display: block; }
+
+  /* ===== Banner ===== */
+  .banner-wrap { position: relative; overflow: hidden; background: #fff; }
+  .banner-slider { display: flex; transition: transform 0.4s ease; }
+  .banner-img { width: 100%; min-width: 100%; height: 160px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #fff; flex-direction: column; gap: 6px; }
+  .banner-img .banner-sub { font-size: 12px; font-weight: 400; opacity: 0.85; }
+  .banner-img.b1 { background: linear-gradient(135deg, #9333ea, #c026d3); }
+  .banner-img.b2 { background: linear-gradient(135deg, #06b6d4, #0ea5e9); }
+  .banner-img.b3 { background: linear-gradient(135deg, #f59e0b, #f97316); }
+  .banner-dots { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); transition: all 0.3s; }
+  .dot.active { background: #fff; width: 16px; border-radius: 3px; }
+
+  /* ===== 分类 ===== */
+  .category-section { background: #fff; padding: 16px 10px 8px; margin-bottom: 8px; }
+  .category-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px 0; }
+  .category-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; padding: 4px 0; transition: transform 0.1s; }
+  .category-item:active { transform: scale(0.92); }
+  .cat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .cat-label { font-size: 12px; color: #333; }
+
+  /* ===== 促销横幅 ===== */
+  .promo-banner { margin: 0 12px 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .promo-card { border-radius: 12px; padding: 14px; color: #fff; position: relative; overflow: hidden; cursor: pointer; height: 80px; transition: transform 0.15s; }
+  .promo-card:active { transform: scale(0.97); }
+  .promo-card.red { background: linear-gradient(135deg, #9333ea, #c026d3); }
+  .promo-card.blue { background: linear-gradient(135deg, #06b6d4, #0ea5e9); }
+  .promo-card .title { font-size: 15px; font-weight: 700; }
+  .promo-card .sub { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+  .promo-card .badge { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 28px; opacity: 0.3; }
+
+  /* ===== 商家列表 ===== */
+  .section-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; background: #fff; border-top: 6px solid #f5f5f5; }
+  .section-title { font-size: 16px; font-weight: 700; color: #222; }
+  .section-more { font-size: 13px; color: #9333ea; }
+  .shop-list { background: #fff; }
+  .shop-card { display: flex; gap: 12px; padding: 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.1s; }
+  .shop-card:active { background: #fafafa; }
+  .shop-img-placeholder { width: 90px; height: 90px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; }
+  .shop-info { flex: 1; min-width: 0; }
+  .shop-name { font-size: 15px; font-weight: 600; color: #222; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .shop-rating { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .stars { color: #ffb400; font-size: 12px; }
+  .rating-num { font-size: 13px; color: #9333ea; font-weight: 600; }
+  .sales { font-size: 12px; color: #999; }
+  .shop-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 5px; }
+  .tag { font-size: 11px; padding: 2px 6px; border-radius: 3px; }
+  .tag.red { background: #f3e8ff; color: #9333ea; }
+  .tag.yellow { background: #fef3c7; color: #d97706; }
+  .tag.blue { background: #e0f2fe; color: #0284c7; }
+  .shop-meta { display: flex; align-items: center; gap: 8px; }
+  .delivery-time { font-size: 12px; color: #666; }
+  .delivery-fee { font-size: 12px; color: #999; }
+  .min-price { font-size: 12px; color: #9333ea; font-weight: 500; }
+
+  /* ===== 商家详情 ===== */
+  .shop-detail-header { position: relative; }
+  .shop-cover { width: 100%; height: 200px; display: flex; align-items: flex-end; padding: 16px; }
+  .back-btn { position: absolute; top: 12px; left: 12px; width: 32px; height: 32px; background: rgba(0,0,0,0.4); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; cursor: pointer; z-index: 10; }
+  .shop-cover-info { color: #fff; }
+  .shop-cover-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .shop-cover-sub { font-size: 13px; opacity: 0.85; }
+  .shop-stats { background: #fff; padding: 12px 16px; display: flex; gap: 20px; border-bottom: 1px solid #f0f0f0; }
+  .stat-item { text-align: center; }
+  .stat-val { font-size: 16px; font-weight: 700; color: #9333ea; }
+  .stat-label { font-size: 11px; color: #999; margin-top: 2px; }
+  .menu-container { display: flex; background: #fff; }
+  .menu-nav { width: 80px; background: #f7f7f7; }
+  .menu-nav-item { padding: 14px 8px; font-size: 13px; color: #666; text-align: center; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s; }
+  .menu-nav-item.active { background: #fff; color: #9333ea; border-left-color: #9333ea; font-weight: 600; }
+  .menu-items { flex: 1; padding: 0 8px; overflow-y: auto; }
+  .menu-group-title { font-size: 13px; color: #999; padding: 10px 6px 6px; font-weight: 600; }
+  .menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 6px; border-bottom: 1px solid #f5f5f5; }
+  .menu-item-img { width: 60px; height: 60px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .menu-item-info { flex: 1; }
+  .menu-item-name { font-size: 14px; font-weight: 500; color: #222; margin-bottom: 4px; }
+  .menu-item-desc { font-size: 12px; color: #999; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .menu-item-price { font-size: 15px; font-weight: 700; color: #9333ea; }
+  .menu-item-price span { font-size: 11px; font-weight: 400; }
+  .menu-item-ctrl { display: flex; align-items: center; gap: 6px; }
+  .ctrl-btn { width: 26px; height: 26px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; transition: transform 0.1s; }
+  .ctrl-btn:active { transform: scale(0.9); }
+  .ctrl-minus { background: #fff; border: 1.5px solid #9333ea; color: #9333ea; }
+  .ctrl-plus { background: #9333ea; color: #fff; }
+  .ctrl-count { font-size: 15px; font-weight: 600; color: #333; min-width: 18px; text-align: center; }
+
+  /* ===== 购物车悬浮 ===== */
+  .cart-float { position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 456px; background: #333; border-radius: 30px; display: flex; align-items: center; padding: 10px 14px; gap: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.25); transition: all 0.3s; z-index: 50; }
+  .cart-float.hidden { transform: translateX(-50%) translateY(100px); opacity: 0; pointer-events: none; }
+  .cart-icon-wrap { position: relative; }
+  .cart-icon { font-size: 26px; }
+  .cart-count-badge { position: absolute; top: -6px; right: -8px; background: #9333ea; color: #fff; font-size: 11px; font-weight: 700; width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; }
+  .cart-price { flex: 1; }
+  .cart-total { color: #fff; font-size: 16px; font-weight: 700; }
+  .cart-min-info { color: #999; font-size: 12px; margin-top: 1px; }
+  .cart-submit { background: #9333ea; color: #fff; border: none; border-radius: 20px; padding: 8px 20px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+  /* ===== 订单页 ===== */
+  .order-tabs { display: flex; background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 57px; z-index: 50; }
+  .order-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 14px; color: #666; cursor: pointer; position: relative; }
+  .order-tab.active { color: #9333ea; font-weight: 600; }
+  .order-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 24px; height: 2px; background: #9333ea; border-radius: 1px; }
+  .order-list { padding: 8px 12px; }
+  .order-card { background: #fff; border-radius: 12px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .order-card-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid #f5f5f5; }
+  .order-shop-name { font-size: 15px; font-weight: 600; color: #222; }
+  .order-status { font-size: 13px; color: #9333ea; font-weight: 500; }
+  .order-status.done { color: #52c41a; }
+  .order-items { padding: 10px 14px; }
+  .order-item-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 4px; }
+  .order-card-footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-top: 1px solid #f5f5f5; }
+  .order-total { font-size: 13px; color: #555; }
+  .order-total strong { color: #9333ea; font-size: 15px; }
+  .order-actions { display: flex; gap: 8px; }
+  .order-btn { padding: 6px 14px; border-radius: 16px; font-size: 13px; cursor: pointer; border: none; }
+  .order-btn.outline { background: #fff; border: 1px solid #ddd; color: #555; }
+  .order-btn.primary { background: #9333ea; color: #fff; }
+  .order-time { font-size: 12px; color: #999; margin-top: 2px; }
+
+  /* ===== 我的页面 ===== */
+  .profile-header { background: linear-gradient(135deg, #9333ea, #c026d3); padding: 30px 20px 20px; }
+  .profile-user { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .avatar { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid rgba(255,255,255,0.6); cursor: pointer; }
+  .user-info .name { font-size: 18px; font-weight: 700; color: #fff; }
+  .user-info .phone { font-size: 13px; color: rgba(255,255,255,0.8); margin-top: 3px; }
+  .user-info .login-hint { font-size: 14px; color: rgba(255,255,255,0.9); margin-top: 3px; text-decoration: underline; cursor: pointer; }
+  .user-stats { display: flex; justify-content: space-around; }
+  .user-stat { text-align: center; color: #fff; }
+  .user-stat .num { font-size: 20px; font-weight: 700; }
+  .user-stat .label { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+  .coupon-bar { margin: 12px; background: #fff; border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .coupon-title { font-size: 15px; font-weight: 600; color: #222; }
+  .coupon-count { font-size: 13px; color: #9333ea; }
+  .menu-group { margin: 0 12px 10px; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .menu-row { display: flex; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.1s; }
+  .menu-row:last-child { border-bottom: none; }
+  .menu-row:active { background: #fafafa; }
+  .menu-row-icon { font-size: 20px; margin-right: 12px; width: 28px; text-align: center; }
+  .menu-row-text { flex: 1; font-size: 15px; color: #222; }
+  .menu-row-arrow { color: #ccc; font-size: 14px; }
+  .menu-row-badge { background: #9333ea; color: #fff; font-size: 11px; border-radius: 8px; padding: 2px 7px; margin-right: 8px; }
+  .menu-row-sub { font-size: 12px; color: #999; margin-right: 8px; }
+
+  /* ===== 底部导航 ===== */
+  .tab-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; display: flex; border-top: 1px solid #eee; z-index: 200; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); height: 60px; align-items: flex-end; }
+  .tab-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0 6px; cursor: pointer; transition: all 0.1s; position: relative; }
+  .tab-item:active { opacity: 0.7; }
+  .tab-icon { font-size: 22px; margin-bottom: 2px; filter: grayscale(1); transition: all 0.2s; }
+  .tab-item.active .tab-icon { filter: none; }
+  .tab-label { font-size: 11px; color: #999; transition: color 0.2s; }
+  .tab-item.active .tab-label { color: #9333ea; font-weight: 600; }
+  .tab-badge { position: absolute; top: 6px; right: calc(50% - 18px); background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 8px; }
+  /* 中间凸起「我的」按钮 */
+  .tab-item.tab-center { position: relative; top: -16px; padding-top: 0; padding-bottom: 0; }
+  .tab-center-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #9333ea, #c026d3); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(147,51,234,0.45); transition: all 0.2s; border: 3px solid #fff; }
+  .tab-center-btn .tab-icon { font-size: 26px; filter: none !important; margin-bottom: 0; }
+  .tab-item.tab-center .tab-label { color: #9333ea; font-weight: 700; margin-top: 4px; font-size: 11px; }
+  .tab-item.tab-center:active .tab-center-btn { transform: scale(0.93); }
+  .tab-item.tab-center.active .tab-center-btn { box-shadow: 0 6px 20px rgba(147,51,234,0.6); }
+
+  /* ===== 通用工具 ===== */
+  ::-webkit-scrollbar { display: none; }
+  .empty-state { text-align: center; padding: 60px 20px; color: #ccc; }
+  .empty-state .icon { font-size: 60px; margin-bottom: 12px; }
+  .empty-state .text { font-size: 15px; }
+
+  /* ===== 遮罩弹窗 ===== */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; }
+  .overlay.show { display: flex; align-items: flex-end; justify-content: center; }
+  .overlay.center { align-items: center; }
+  .bottom-sheet { background: #fff; border-radius: 18px 18px 0 0; width: 100%; max-width: 480px; padding: 20px; max-height: 80vh; overflow-y: auto; animation: slideUp 0.3s ease; }
+  .center-sheet { background: #fff; border-radius: 18px; width: calc(100% - 40px); max-width: 440px; padding: 28px 24px; animation: zoomIn 0.25s ease; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  @keyframes zoomIn { from{transform:scale(0.85);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+  .fullscreen-page { animation: slideInRight 0.3s ease; }
+  .sheet-title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 16px; text-align: center; }
+  .cart-list { margin-bottom: 16px; }
+  .cart-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .cart-row-name { flex: 1; font-size: 14px; color: #333; }
+  .cart-row-price { font-size: 14px; color: #9333ea; font-weight: 600; margin-right: 10px; }
+  .checkout-btn { width: 100%; background: #9333ea; color: #fff; border: none; border-radius: 24px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+  .checkout-btn:active { background: #7c22ce; }
+  .checkout-btn:disabled { background: #ccc; }
+
+  /* ===== Toast ===== */
+  .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: rgba(0,0,0,0.75); color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 999; transition: all 0.25s; pointer-events: none; text-align: center; max-width: 200px; }
+  .toast.show { transform: translate(-50%, -50%) scale(1); }
+
+  /* ===== 登录/注册 ===== */
+  .login-page { position: fixed; inset: 0; background: #fff; z-index: 500; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
+  .login-page.show { display: flex; }
+  .login-header { padding: 50px 28px 20px; }
+  .login-close { position: absolute; top: 18px; right: 18px; font-size: 22px; color: #999; cursor: pointer; padding: 6px; }
+  .login-logo { font-size: 48px; margin-bottom: 10px; }
+  .login-title { font-size: 26px; font-weight: 700; color: #222; margin-bottom: 6px; }
+  .login-sub { font-size: 14px; color: #999; }
+  .login-body { padding: 10px 28px; flex: 1; }
+  .login-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid #eee; }
+  .login-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 15px; color: #999; cursor: pointer; position: relative; }
+  .login-tab.active { color: #9333ea; font-weight: 600; }
+  .login-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); width: 30px; height: 2px; background: #9333ea; border-radius: 1px; }
+  .input-group { margin-bottom: 16px; }
+  .input-label { font-size: 13px; color: #666; margin-bottom: 6px; }
+  .input-wrap { display: flex; align-items: center; border: 1.5px solid #eee; border-radius: 12px; padding: 0 14px; background: #fafafa; transition: border-color 0.2s; }
+  .input-wrap:focus-within { border-color: #9333ea; background: #fff; }
+  .input-wrap input { flex: 1; border: none; outline: none; font-size: 15px; padding: 14px 0; background: transparent; color: #222; }
+  .input-wrap input::placeholder { color: #bbb; }
+  .input-prefix { font-size: 15px; color: #333; margin-right: 8px; font-weight: 500; }
+  .input-suffix-btn { font-size: 13px; color: #9333ea; cursor: pointer; white-space: nowrap; padding: 4px 0; font-weight: 500; }
+  .input-suffix-btn.disabled { color: #bbb; pointer-events: none; }
+  .login-btn { width: 100%; background: linear-gradient(135deg, #9333ea, #c026d3); color: #fff; border: none; border-radius: 24px; padding: 15px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 8px; letter-spacing: 1px; box-shadow: 0 4px 16px rgba(147,51,234,0.35); }
+  .login-btn:active { opacity: 0.9; }
+  .login-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 18px; }
+  .login-divider span { font-size: 13px; color: #ccc; white-space: nowrap; }
+  .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: #eee; }
+  .third-party { display: flex; justify-content: center; gap: 28px; }
+  .third-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+  .third-btn:active { opacity: 0.7; }
+  .third-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; border: 1px solid #eee; }
+  .third-label { font-size: 12px; color: #999; }
+  .login-agree { font-size: 12px; color: #999; text-align: center; margin-top: 20px; padding: 0 10px; line-height: 1.7; }
+  .login-agree a { color: #9333ea; }
+
+  /* ===== 地图定位 ===== */
+  .map-page { position: fixed; inset: 0; background: #fff; z-index: 500; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
+  .map-page.show { display: flex; }
+  .map-header { background: #fff; padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f0f0f0; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .map-back { font-size: 20px; color: #333; cursor: pointer; padding: 4px; }
+  .map-search-box { flex: 1; background: #f5f5f5; border-radius: 20px; padding: 9px 14px; display: flex; align-items: center; gap: 8px; }
+  .map-search-box input { border: none; outline: none; flex: 1; font-size: 14px; color: #333; background: transparent; }
+  .map-canvas { flex: 1; position: relative; overflow: hidden; background: #e8f0ea; }
+  .map-bg { width: 100%; height: 100%; background:
+    repeating-linear-gradient(0deg, transparent, transparent 49px, #d4e0d6 49px, #d4e0d6 50px),
+    repeating-linear-gradient(90deg, transparent, transparent 49px, #d4e0d6 49px, #d4e0d6 50px),
+    #e8f0ea; }
+  .map-road-h { position: absolute; background: #fff; height: 18px; left: 0; right: 0; border-top: 1px solid #ccc; border-bottom: 1px solid #ccc; }
+  .map-road-v { position: absolute; background: #fff; width: 18px; top: 0; bottom: 0; border-left: 1px solid #ccc; border-right: 1px solid #ccc; }
+  .map-block { position: absolute; background: #c8d8ca; border-radius: 4px; }
+  .map-park { position: absolute; background: #a8c8aa; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #6a9a6c; font-weight: 600; }
+  .map-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 10; animation: pinBounce 0.6s ease; }
+  @keyframes pinBounce { 0%{transform:translate(-50%,-110%)} 50%{transform:translate(-50%,-90%)} 100%{transform:translate(-50%,-100%)} }
+  .map-pin-icon { font-size: 32px; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3)); }
+  .map-locate-btn { position: absolute; right: 16px; bottom: 16px; width: 44px; height: 44px; background: #fff; border-radius: 50%; box-shadow: 0 2px 10px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; z-index: 10; }
+  .map-locate-btn:active { background: #f5f5f5; }
+  .locating-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; border-radius: 50%; border: 2px solid #9333ea; opacity: 0; animation: ringPulse 1.5s ease-out infinite; }
+  @keyframes ringPulse { 0%{transform:translate(-50%,-50%) scale(0.5);opacity:0.8} 100%{transform:translate(-50%,-50%) scale(2.5);opacity:0} }
+  .map-bottom { background: #fff; border-radius: 20px 20px 0 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); }
+  .map-current-location { padding: 16px 16px 8px; display: flex; align-items: flex-start; gap: 10px; border-bottom: 1px solid #f5f5f5; }
+  .map-loc-icon { font-size: 18px; margin-top: 1px; }
+  .map-loc-info { flex: 1; }
+  .map-loc-name { font-size: 16px; font-weight: 600; color: #222; margin-bottom: 3px; }
+  .map-loc-addr { font-size: 12px; color: #999; }
+  .map-use-btn { background: #9333ea; color: #fff; border: none; border-radius: 16px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .map-addr-list { max-height: 240px; overflow-y: auto; }
+  .map-addr-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.1s; }
+  .map-addr-item:active { background: #fafafa; }
+  .map-addr-item.selected { background: #f5f0ff; }
+  .map-addr-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; flex-shrink: 0; }
+  .map-addr-item.selected .map-addr-dot { background: #9333ea; }
+  .map-addr-text { flex: 1; }
+  .map-addr-name { font-size: 14px; color: #222; margin-bottom: 2px; }
+  .map-addr-detail { font-size: 12px; color: #999; }
+  .map-addr-dist { font-size: 12px; color: #9333ea; }
+  .locating-overlay { position: absolute; inset: 0; background: rgba(232,240,234,0.7); display: flex; align-items: center; justify-content: center; z-index: 20; }
+  .locating-box { background: #fff; border-radius: 14px; padding: 20px 28px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+  .locating-spinner { font-size: 36px; animation: spin 1s linear infinite; margin-bottom: 10px; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .locating-text { font-size: 14px; color: #555; }
+
+  /* ===== 确认订单页 ===== */
+  .confirm-page { position: fixed; inset: 0; background: #f5f5f5; z-index: 400; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; overflow-y: auto; }
+  .confirm-page.show { display: flex; }
+  .confirm-header { background: #fff; padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f0f0f0; position: sticky; top: 0; z-index: 10; }
+  .confirm-back { font-size: 20px; color: #333; cursor: pointer; }
+  .confirm-title { font-size: 17px; font-weight: 600; color: #222; }
+  .confirm-body { padding: 10px 12px; padding-bottom: 100px; flex: 1; }
+  .confirm-card { background: #fff; border-radius: 12px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .confirm-card-title { padding: 14px 16px 0; font-size: 13px; font-weight: 600; color: #999; }
+  .confirm-addr-row { display: flex; align-items: center; padding: 14px 16px; gap: 12px; cursor: pointer; }
+  .confirm-addr-row:active { background: #fafafa; }
+  .confirm-addr-icon { font-size: 20px; }
+  .confirm-addr-info { flex: 1; }
+  .confirm-addr-name { font-size: 15px; font-weight: 600; color: #222; margin-bottom: 3px; }
+  .confirm-addr-detail { font-size: 13px; color: #666; }
+  .confirm-addr-arrow { color: #ccc; font-size: 14px; }
+  .confirm-shop-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #f5f5f5; }
+  .confirm-shop-emoji { font-size: 22px; }
+  .confirm-shop-name { font-size: 14px; font-weight: 500; color: #222; }
+  .confirm-item-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-bottom: 1px solid #f5f5f5; }
+  .confirm-item-left { display: flex; align-items: center; gap: 8px; }
+  .confirm-item-emoji { font-size: 18px; }
+  .confirm-item-name { font-size: 14px; color: #333; }
+  .confirm-item-price { font-size: 14px; color: #9333ea; font-weight: 500; }
+  .confirm-fee-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; }
+  .confirm-fee-label { font-size: 13px; color: #666; }
+  .confirm-fee-val { font-size: 13px; color: #333; }
+  .confirm-total-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-top: 1px solid #f5f5f5; }
+  .confirm-total-label { font-size: 15px; font-weight: 600; color: #222; }
+  .confirm-total-val { font-size: 18px; font-weight: 700; color: #9333ea; }
+  .confirm-remark { padding: 12px 16px; }
+  .confirm-remark input { width: 100%; border: 1.5px solid #eee; border-radius: 10px; padding: 10px 12px; font-size: 14px; color: #333; outline: none; background: #fafafa; }
+  .confirm-remark input:focus { border-color: #9333ea; background: #fff; }
+  .confirm-footer { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; padding: 12px 16px; border-top: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
+  .confirm-footer-total { font-size: 13px; color: #555; }
+  .confirm-footer-total strong { font-size: 18px; color: #9333ea; }
+  .confirm-pay-btn { background: #9333ea; color: #fff; border: none; border-radius: 24px; padding: 12px 30px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .confirm-pay-btn:active { background: #7c22ce; }
+  .confirm-time-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+  .confirm-time-label { font-size: 14px; color: #333; }
+  .confirm-time-val { font-size: 14px; color: #9333ea; font-weight: 500; }
+
+  /* ===== 支付收银台 ===== */
+  .pay-page { position: fixed; inset: 0; background: #f5f5f5; z-index: 600; display: none; flex-direction: column; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
+  .pay-page.show { display: flex; }
+  .pay-header { background: linear-gradient(135deg, #9333ea, #c026d3); padding: 20px 16px; display: flex; align-items: center; gap: 12px; }
+  .pay-back { font-size: 20px; color: #fff; cursor: pointer; padding: 4px; }
+  .pay-header-title { font-size: 17px; font-weight: 600; color: #fff; }
+  .pay-amount-box { background: linear-gradient(135deg, #9333ea, #c026d3); padding: 20px 16px 30px; text-align: center; }
+  .pay-amount-label { font-size: 14px; color: rgba(255,255,255,0.85); margin-bottom: 8px; }
+  .pay-amount-num { font-size: 42px; font-weight: 700; color: #fff; }
+  .pay-amount-num .unit { font-size: 22px; font-weight: 400; }
+  .pay-body { flex: 1; background: #f5f5f5; margin-top: -16px; border-radius: 16px 16px 0 0; padding: 20px 12px; overflow-y: auto; }
+  .pay-section-title { font-size: 13px; color: #999; font-weight: 600; margin: 0 4px 8px; }
+  .pay-methods { background: #fff; border-radius: 12px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .pay-method-item { display: flex; align-items: center; padding: 15px 16px; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.1s; }
+  .pay-method-item:last-child { border-bottom: none; }
+  .pay-method-item:active { background: #fafafa; }
+  .pay-method-icon { font-size: 26px; margin-right: 12px; }
+  .pay-method-info { flex: 1; }
+  .pay-method-name { font-size: 15px; font-weight: 500; color: #222; }
+  .pay-method-sub { font-size: 12px; color: #999; margin-top: 2px; }
+  .pay-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .pay-radio.selected { border-color: #9333ea; background: #9333ea; }
+  .pay-radio.selected::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+  .pay-order-info { background: #fff; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .pay-order-row { display: flex; justify-content: space-between; font-size: 13px; color: #666; margin-bottom: 6px; }
+  .pay-order-row:last-child { margin-bottom: 0; color: #333; font-weight: 500; }
+  .pay-footer { padding: 12px 16px 20px; }
+  .pay-submit-btn { width: 100%; background: linear-gradient(135deg, #9333ea, #c026d3); color: #fff; border: none; border-radius: 28px; padding: 16px; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(147,51,234,0.4); letter-spacing: 1px; }
+  .pay-submit-btn:active { opacity: 0.9; }
+  .pay-secure { text-align: center; font-size: 12px; color: #bbb; margin-top: 10px; }
+
+  /* ===== 支付中动画 ===== */
+  .paying-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 800; display: none; align-items: center; justify-content: center; }
+  .paying-mask.show { display: flex; }
+  .paying-box { background: #fff; border-radius: 20px; padding: 32px 40px; text-align: center; }
+  .paying-icon { font-size: 50px; margin-bottom: 14px; animation: payPulse 0.6s ease infinite alternate; }
+  @keyframes payPulse { from{transform:scale(1)} to{transform:scale(1.1)} }
+  .paying-text { font-size: 16px; color: #333; font-weight: 500; margin-bottom: 4px; }
+  .paying-sub { font-size: 13px; color: #999; }
+
+  /* ===== 支付成功页 ===== */
+  .pay-success-page { position: fixed; inset: 0; background: #fff; z-index: 700; display: none; flex-direction: column; align-items: center; justify-content: center; max-width: 480px; margin: 0 auto; left: 50%; transform: translateX(-50%); width: 100%; }
+  .pay-success-page.show { display: flex; }
+  .success-icon-wrap { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #52c41a, #73d13d); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(82,196,26,0.35); animation: successPop 0.5s cubic-bezier(.175,.885,.32,1.275); }
+  @keyframes successPop { from{transform:scale(0)} to{transform:scale(1)} }
+  .success-icon { font-size: 44px; color: #fff; }
+  .success-title { font-size: 22px; font-weight: 700; color: #222; margin-bottom: 8px; }
+  .success-sub { font-size: 14px; color: #999; margin-bottom: 6px; }
+  .success-order-no { font-size: 12px; color: #bbb; margin-bottom: 36px; }
+  .success-actions { display: flex; gap: 14px; }
+  .success-btn { padding: 12px 26px; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; }
+  .success-btn.outline { background: #fff; border: 1.5px solid #9333ea; color: #9333ea; }
+  .success-btn.primary { background: #9333ea; color: #fff; }
+  .success-timeline { margin-top: 30px; background: #f9f9f9; border-radius: 14px; padding: 16px 20px; width: calc(100% - 60px); }
+  .success-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; position: relative; }
+  .success-step:last-child { margin-bottom: 0; }
+  .step-dot { width: 10px; height: 10px; border-radius: 50%; background: #9333ea; flex-shrink: 0; margin-top: 4px; }
+  .step-line { position: absolute; left: 4px; top: 14px; bottom: -12px; width: 2px; background: #eee; }
+  .success-step:last-child .step-line { display: none; }
+  .step-info .step-title { font-size: 13px; font-weight: 500; color: #333; }
+  .step-info .step-time { font-size: 11px; color: #bbb; margin-top: 2px; }
+
+  /* ===== 验证码 ===== */
+  .code-inputs { display: flex; gap: 10px; justify-content: space-between; margin: 8px 0; }
+  .code-input { width: 44px; height: 50px; border: 1.5px solid #eee; border-radius: 10px; text-align: center; font-size: 22px; font-weight: 700; color: #222; outline: none; background: #fafafa; transition: border-color 0.2s; }
+  .code-input:focus { border-color: #9333ea; background: #fff; }
+</style>
+</head>
+<body>
+
+<!-- 状态栏 -->
+<div class="status-bar">
+  <span class="time" id="statusTime">12:57</span>
+  <div class="icons"><span>📶</span><span>🔋</span></div>
+</div>
+
+<!-- 顶部头部 -->
+<div class="app-header" id="appHeader">
+  <div class="header-search">
+    <div class="location-btn" onclick="openMapPage()">
+      <span>📍</span>
+      <span id="headerLocation">萌宠小区</span>
+      <span class="arrow">▾</span>
+    </div>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="搜索宠物店、服务、商品...">
+    </div>
+    <div class="msg-btn" onclick="requireLogin()">🔔<div class="msg-dot"></div></div>
+  </div>
+</div>
+
+<!-- ============ 首页 ============ -->
+<div class="page active" id="page-home">
+  <div class="banner-wrap">
+    <div class="banner-slider" id="bannerSlider">
+      <div class="banner-img b1">
+        🐶 新用户专享 首单立减20元
+        <div class="banner-sub">新注册用户限时福利</div>
+      </div>
+      <div class="banner-img b2">
+        🐱 宠物洗澡美容 8折优惠
+        <div class="banner-sub">专业美容师 服务有保障</div>
+      </div>
+      <div class="banner-img b3">
+        🐰 宠物零食大促 低至5折
+        <div class="banner-sub">天然食材 主子超爱吃</div>
+      </div>
+    </div>
+    <div class="banner-dots">
+      <div class="dot active" id="dot0"></div>
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+    </div>
+  </div>
+  <div class="category-section">
+    <div class="category-grid">
+      <div class="category-item" onclick="goShopDetail(0)"><div class="cat-icon" style="background:#f3e8ff">🍖</div><span class="cat-label">宠物食品</span></div>
+      <div class="category-item" onclick="goShopDetail(1)"><div class="cat-icon" style="background:#fce7f3">🛁</div><span class="cat-label">美容洗护</span></div>
+      <div class="category-item" onclick="goShopDetail(2)"><div class="cat-icon" style="background:#ecfdf5">💊</div><span class="cat-label">宠物医疗</span></div>
+      <div class="category-item" onclick="goShopDetail(3)"><div class="cat-icon" style="background:#fff7ed">🏠</div><span class="cat-label">宠物用品</span></div>
+      <div class="category-item" onclick="showToast('更多服务开发中...')"><div class="cat-icon" style="background:#f5f3ff">🐾</div><span class="cat-label">更多</span></div>
+      <div class="category-item" onclick="showPetTravel()"><div class="cat-icon" style="background:#fef3c7">🚗</div><span class="cat-label">宠物出行</span></div>
+      <div class="category-item" onclick="showToast('宠物寄养开发中...')"><div class="cat-icon" style="background:#e0f2fe">🏡</div><span class="cat-label">寄养服务</span></div>
+      <div class="category-item" onclick="showToast('宠物训练开发中...')"><div class="cat-icon" style="background:#fce7f3">🎓</div><span class="cat-label">宠物训练</span></div>
+      <div class="category-item" onclick="showToast('宠物摄影开发中...')"><div class="cat-icon" style="background:#f3e8ff">📷</div><span class="cat-label">宠物摄影</span></div>
+      <div class="category-item" onclick="showToast('宠物保险开发中...')"><div class="cat-icon" style="background:#ecfdf5">🛡</div><span class="cat-label">宠物保险</span></div>
+    </div>
+  </div>
+  <div class="promo-banner">
+    <div class="promo-card red" onclick="requireLogin()"><div class="title">🐶 新人礼包</div><div class="sub">首单立减20元</div><div class="badge">🎁</div></div>
+    <div class="promo-card blue" onclick="requireLogin()"><div class="title">🐱 超级会员</div><div class="sub">每月享88元宠物福利</div><div class="badge">👑</div></div>
+  </div>
+  <div class="section-header">
+    <span class="section-title">🐾 附近热门店铺</span>
+    <span class="section-more">全部 ›</span>
+  </div>
+  <div class="shop-list" id="shopList"></div>
+</div>
+
+<!-- ============ 商家详情页 ============ -->
+<div class="page" id="page-detail">
+  <div class="shop-detail-header">
+    <div class="back-btn" onclick="goBack()">‹</div>
+    <div class="shop-cover" id="detailCover">
+      <div class="shop-cover-info">
+        <div class="shop-cover-name" id="detailName">店铺名称</div>
+        <div class="shop-cover-sub" id="detailSub">营业中</div>
+      </div>
+    </div>
+  </div>
+  <div class="shop-stats">
+    <div class="stat-item"><div class="stat-val" id="detailRating">4.9</div><div class="stat-label">评分</div></div>
+    <div class="stat-item"><div class="stat-val" id="detailSales">2k+</div><div class="stat-label">月售</div></div>
+    <div class="stat-item"><div class="stat-val" id="detailTime">20分钟</div><div class="stat-label">配送</div></div>
+    <div class="stat-item"><div class="stat-val" id="detailFee">¥0</div><div class="stat-label">配送费</div></div>
+  </div>
+  <div class="menu-container">
+    <div class="menu-nav" id="menuNav"></div>
+    <div class="menu-items" id="menuItems"></div>
+  </div>
+</div>
+
+<!-- ============ 社区页 ============ -->
+<div class="page" id="page-community">
+  <!-- 顶部导航栏 -->
+  <div style="background:#fff;position:sticky;top:0;z-index:50;border-bottom:1px solid #f0e8ff;">
+    <div style="padding:13px 16px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:19px;font-weight:800;">🐾 宠物社区</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="position:relative;cursor:pointer;" onclick="openMsgPage()">
+          <span style="font-size:22px;">💬</span>
+          <span style="position:absolute;top:-4px;right:-6px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 5px;line-height:1.4;">3</span>
+        </div>
+        <div style="font-size:22px;cursor:pointer;" onclick="showPostModal()">✏️</div>
+      </div>
+    </div>
+    <!-- 功能服务快捷入口 -->
+    <div style="display:flex;padding:0 12px 12px;gap:8px;">
+      <div onclick="openCommPanel(0)" style="flex:1;background:linear-gradient(135deg,#f5f0ff,#fce7f3);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.15s;active:transform:scale(0.95);">
+        <div style="font-size:22px;margin-bottom:3px;">🐶</div>
+        <div style="font-size:12px;font-weight:700;color:#9333ea;">宠物配种</div>
+      </div>
+      <div onclick="openCommPanel(1)" style="flex:1;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;">
+        <div style="font-size:22px;margin-bottom:3px;">💊</div>
+        <div style="font-size:12px;font-weight:700;color:#059669;">宠物医疗</div>
+      </div>
+      <div onclick="openCommPanel(2)" style="flex:1;background:linear-gradient(135deg,#fff7ed,#fef3c7);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;">
+        <div style="font-size:22px;margin-bottom:3px;">🩹</div>
+        <div style="font-size:12px;font-weight:700;color:#d97706;">小毛病</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 话题标签横滑 -->
+  <div style="background:#fff;padding:10px 12px 12px;margin-bottom:8px;display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    <div onclick="filterTopic(this,'全部')" style="flex-shrink:0;background:#9333ea;color:#fff;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;">全部</div>
+    <div onclick="filterTopic(this,'晒宠')" style="flex-shrink:0;background:#fce7f3;color:#ec4899;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;">#晒宠</div>
+    <div onclick="filterTopic(this,'求助')" style="flex-shrink:0;background:#ede9fe;color:#9333ea;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;">#求助</div>
+    <div onclick="filterTopic(this,'日常')" style="flex-shrink:0;background:#d1fae5;color:#059669;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;">#日常</div>
+    <div onclick="filterTopic(this,'美食')" style="flex-shrink:0;background:#fef3c7;color:#d97706;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;">#美食</div>
+    <div onclick="filterTopic(this,'技巧')" style="flex-shrink:0;background:#e0f2fe;color:#0284c7;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;">#技巧</div>
+    <div onclick="filterTopic(this,'搞笑')" style="flex-shrink:0;background:#fce7f3;color:#db2777;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;">#搞笑</div>
+  </div>
+
+  <!-- 帖子流 -->
+  <div id="postFeed" style="padding:0 12px 8px;display:flex;flex-direction:column;gap:10px;">
+
+    <!-- 帖子1 -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(147,51,234,0.07);" onclick="openPost(1)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800;flex-shrink:0;">喵</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">橘猫宝妈</div>
+          <div style="font-size:11px;color:#999;">今天 10:23 · 上海</div>
+        </div>
+        <span style="background:#fce7f3;color:#ec4899;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">#晒宠</span>
+      </div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">我家橘猫今天偷吃了半包猫粮被我抓现行，脸上写满了"我没有"😂 各位铲屎官有没有同款熊孩子？</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;border-radius:10px;overflow:hidden;">
+        <div style="height:120px;background:linear-gradient(135deg,#fde68a,#fbbf24);display:flex;align-items:center;justify-content:center;font-size:60px;border-radius:8px;">🐱</div>
+        <div style="height:120px;background:linear-gradient(135deg,#fce7f3,#f9a8d4);display:flex;align-items:center;justify-content:center;font-size:60px;border-radius:8px;">😹</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;color:#999;font-size:13px;border-top:1px solid #f5f5f5;padding-top:10px;">
+        <span onclick="likePost(this,1);event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">❤️ <span>128</span></span>
+        <span style="display:flex;align-items:center;gap:4px;">💬 <span>36</span></span>
+        <span onclick="sharePost();event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">↗️ <span>分享</span></span>
+        <span onclick="openPrivateMsg('橘猫宝妈');event.stopPropagation();" style="margin-left:auto;cursor:pointer;background:#f5f0ff;color:#9333ea;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">💌 私信</span>
+      </div>
+    </div>
+
+    <!-- 帖子2 -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(147,51,234,0.07);" onclick="openPost(2)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800;flex-shrink:0;">汪</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">柴犬爸爸Leo</div>
+          <div style="font-size:11px;color:#999;">昨天 19:45 · 北京</div>
+        </div>
+        <span style="background:#ede9fe;color:#9333ea;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">#求助</span>
+      </div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">🆘 求助！我家柴犬最近总是狂抓耳朵，好像里面很痒，有点轻微异味，去宠物医院说是耳螨，用了一次耳道清洁剂，但还是反复...有没有经验丰富的主人或医生指导一下？</div>
+      <div style="background:#fef9ec;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+        <div style="font-size:12px;color:#d97706;font-weight:700;margin-bottom:4px;">🩺 张医生已回复</div>
+        <div style="font-size:13px;color:#555;line-height:1.6;">耳螨治疗需连续用药2-3周，单次效果有限。建议使用伊维菌素类滴耳液，配合每周清洁1-2次...</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;color:#999;font-size:13px;border-top:1px solid #f5f5f5;padding-top:10px;">
+        <span onclick="likePost(this,2);event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">❤️ <span>67</span></span>
+        <span style="display:flex;align-items:center;gap:4px;">💬 <span>18</span></span>
+        <span onclick="sharePost();event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">↗️ <span>分享</span></span>
+        <span onclick="openPrivateMsg('柴犬爸爸Leo');event.stopPropagation();" style="margin-left:auto;cursor:pointer;background:#f5f0ff;color:#9333ea;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">💌 私信</span>
+      </div>
+    </div>
+
+    <!-- 帖子3 -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(147,51,234,0.07);" onclick="openPost(3)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800;flex-shrink:0;">兔</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">垂耳兔小雪的妈</div>
+          <div style="font-size:11px;color:#999;">2小时前 · 成都</div>
+        </div>
+        <span style="background:#d1fae5;color:#059669;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">#日常</span>
+      </div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">分享一个自制兔兔磨牙棒的小技巧🐰！用苹果树枝晾干后给兔子啃，既安全又天然，比买的更受欢迎！小雪已经把第二根磨掉一半了哈哈</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px;border-radius:10px;overflow:hidden;">
+        <div style="height:90px;background:linear-gradient(135deg,#fef3c7,#fde68a);display:flex;align-items:center;justify-content:center;font-size:44px;border-radius:8px;">🐰</div>
+        <div style="height:90px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);display:flex;align-items:center;justify-content:center;font-size:44px;border-radius:8px;">🌿</div>
+        <div style="height:90px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);display:flex;align-items:center;justify-content:center;font-size:44px;border-radius:8px;">✂️</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;color:#999;font-size:13px;border-top:1px solid #f5f5f5;padding-top:10px;">
+        <span onclick="likePost(this,3);event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">❤️ <span>243</span></span>
+        <span style="display:flex;align-items:center;gap:4px;">💬 <span>55</span></span>
+        <span onclick="sharePost();event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">↗️ <span>分享</span></span>
+        <span onclick="openPrivateMsg('垂耳兔小雪的妈');event.stopPropagation();" style="margin-left:auto;cursor:pointer;background:#f5f0ff;color:#9333ea;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">💌 私信</span>
+      </div>
+    </div>
+
+    <!-- 帖子4 -->
+    <div style="background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(147,51,234,0.07);" onclick="openPost(4)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#f43f5e);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;font-weight:800;flex-shrink:0;">猫</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;">英短铲屎官</div>
+          <div style="font-size:11px;color:#999;">3小时前 · 广州</div>
+        </div>
+        <span style="background:#fce7f3;color:#db2777;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;">#搞笑</span>
+      </div>
+      <div style="font-size:14px;color:#333;line-height:1.7;margin-bottom:10px;">给猫猫录视频，结果被它无情夺镜，全程淡定凝视，这是在怀疑我的摄影技术吗？😂猫子的表情实在太丰富了！</div>
+      <div style="display:flex;align-items:center;gap:16px;color:#999;font-size:13px;border-top:1px solid #f5f5f5;padding-top:10px;">
+        <span onclick="likePost(this,4);event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">❤️ <span>512</span></span>
+        <span style="display:flex;align-items:center;gap:4px;">💬 <span>89</span></span>
+        <span onclick="sharePost();event.stopPropagation();" style="cursor:pointer;display:flex;align-items:center;gap:4px;">↗️ <span>分享</span></span>
+        <span onclick="openPrivateMsg('英短铲屎官');event.stopPropagation();" style="margin-left:auto;cursor:pointer;background:#f5f0ff;color:#9333ea;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;">💌 私信</span>
+      </div>
+    </div>
+
+    <!-- 加载更多 -->
+    <div style="text-align:center;padding:16px 0;color:#ccc;font-size:13px;">— 到底了，已经没有更多啦 🐾 —</div>
+  </div>
+</div>
+
+<!-- ============ 宠物配种弹窗 ============ -->
+<div class="overlay" id="commPanelModal-0" onclick="if(event.target===this)closeCommPanel(0)">
+  <div class="bottom-sheet" style="max-height:85vh;overflow-y:auto;padding-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:800;">🐶 宠物配种</div>
+      <div onclick="closeCommPanel(0)" style="font-size:22px;color:#999;cursor:pointer;">✕</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#f5f0ff,#fce7f3);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:36px;">🐕</div>
+      <div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:2px;">找到合适的对象</div>
+        <div style="font-size:12px;color:#9333ea;">发布配种需求 · 严选健康品种 · 专业指导</div>
+      </div>
+      <button onclick="alert('🐾 发布配种需求功能开发中~')" style="margin-left:auto;background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">发需求</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#fce7f3,#ede9fe);display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;">🐱</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
+              <div style="font-weight:800;font-size:15px;">布偶猫公猫找配偶</div>
+              <span style="background:#fce7f3;color:#ec4899;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">配种中</span>
+            </div>
+            <div style="font-size:13px;color:#666;margin-bottom:6px;">品种：布偶猫 · 2岁 · 已做绝育前检查✓</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span style="background:#f5f0ff;color:#9333ea;border-radius:8px;padding:3px 8px;font-size:11px;">公猫</span>
+              <span style="background:#f5f0ff;color:#9333ea;border-radius:8px;padding:3px 8px;font-size:11px;">蓝眼</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #ede9fe;">
+          <div style="font-size:12px;color:#999;">📍 浦东新区 · 今天</div>
+          <button onclick="openPrivateMsg('布偶猫配种主');closeCommPanel(0);" style="background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:700;cursor:pointer;">联系TA</button>
+        </div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,#d1fae5,#a7f3d0);display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0;">🐕</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap;">
+              <div style="font-weight:800;font-size:15px;">柴犬母犬诚觅公犬</div>
+              <span style="background:#d1fae5;color:#059669;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:700;">求配中</span>
+            </div>
+            <div style="font-size:13px;color:#666;margin-bottom:6px;">品种：柴犬 · 3岁 · 体检正常✓</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span style="background:#d1fae5;color:#059669;border-radius:8px;padding:3px 8px;font-size:11px;">母犬</span>
+              <span style="background:#d1fae5;color:#059669;border-radius:8px;padding:3px 8px;font-size:11px;">赤色</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid #d1fae5;">
+          <div style="font-size:12px;color:#999;">📍 徐汇区 · 昨天</div>
+          <button onclick="openPrivateMsg('柴犬配种主');closeCommPanel(0);" style="background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:16px;padding:6px 16px;font-size:13px;font-weight:700;cursor:pointer;">联系TA</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 宠物医疗弹窗 ============ -->
+<div class="overlay" id="commPanelModal-1" onclick="if(event.target===this)closeCommPanel(1)">
+  <div class="bottom-sheet" style="max-height:85vh;overflow-y:auto;padding-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:800;">💊 宠物医疗</div>
+      <div onclick="closeCommPanel(1)" style="font-size:22px;color:#999;cursor:pointer;">✕</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:36px;">🩺</div>
+      <div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:2px;">在线问诊 · 24小时</div>
+        <div style="font-size:12px;color:#059669;">执业兽医师在线解答 · 快速响应</div>
+      </div>
+      <button onclick="alert('🩺 在线问诊功能开发中~')" style="margin-left:auto;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">立即问诊</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;text-align:center;cursor:pointer;" onclick="alert('开发中~')">
+        <div style="font-size:32px;margin-bottom:6px;">💉</div>
+        <div style="font-weight:700;font-size:13px;">疫苗接种</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">查看接种计划</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;text-align:center;cursor:pointer;" onclick="alert('开发中~')">
+        <div style="font-size:32px;margin-bottom:6px;">🔬</div>
+        <div style="font-weight:700;font-size:13px;">化验检查</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">血常规/粪检</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;text-align:center;cursor:pointer;" onclick="alert('开发中~')">
+        <div style="font-size:32px;margin-bottom:6px;">🏥</div>
+        <div style="font-weight:700;font-size:13px;">预约就诊</div>
+        <div style="font-size:11px;color:#999;margin-top:2px;">线下医院挂号</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;text-align:center;cursor:pointer;" onclick="showPetHealthCard();closeCommPanel(1);">
+        <div style="font-size:32px;margin-bottom:6px;">📋</div>
+        <div style="font-weight:700;font-size:13px;">健康档案</div>
+        <div style="font-size:11px;color:#9333ea;margin-top:2px;font-weight:600;">查看健康卡</div>
+      </div>
+    </div>
+    <div style="font-size:15px;font-weight:800;margin-bottom:10px;">👨‍⚕️ 在线医生</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;">
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;font-weight:800;flex-shrink:0;">张</div>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:14px;">张医生 · 全科兽医</div>
+          <div style="font-size:12px;color:#999;margin:2px 0;">从业10年 · 擅长猫狗内科、皮肤病</div>
+          <div style="color:#fbbf24;font-size:12px;">★★★★★ <span style="color:#999;">4.9分 · 2,156次服务</span></div>
+        </div>
+        <button onclick="openPrivateMsg('张医生');closeCommPanel(1);" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">问诊</button>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center;">
+        <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;font-weight:800;flex-shrink:0;">李</div>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:14px;">李医生 · 外科兽医</div>
+          <div style="font-size:12px;color:#999;margin:2px 0;">从业8年 · 擅长骨科、软组织手术</div>
+          <div style="color:#fbbf24;font-size:12px;">★★★★★ <span style="color:#999;">4.8分 · 1,832次服务</span></div>
+        </div>
+        <button onclick="openPrivateMsg('李医生');closeCommPanel(1);" style="background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:12px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;">问诊</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 小毛病弹窗 ============ -->
+<div class="overlay" id="commPanelModal-2" onclick="if(event.target===this)closeCommPanel(2)">
+  <div class="bottom-sheet" style="max-height:85vh;overflow-y:auto;padding-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:800;">🩹 宠物小毛病</div>
+      <div onclick="closeCommPanel(2)" style="font-size:22px;color:#999;cursor:pointer;">✕</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+      <div style="font-size:36px;">🩹</div>
+      <div>
+        <div style="font-weight:800;font-size:15px;margin-bottom:2px;">宠物常见问题解答</div>
+        <div style="font-size:12px;color:#d97706;">铲屎官经验分享 · 兽医专业解答</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="background:#f9f9f9;border-radius:14px;padding:16px;cursor:pointer;" onclick="alert('查看详细解答~')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="font-weight:800;font-size:14px;flex:1;">🤧 猫咪打喷嚏流鼻水怎么办？</div>
+          <span style="background:#fef3c7;color:#d97706;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap;margin-left:8px;">已解答</span>
+        </div>
+        <div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:8px;">猫咪频繁打喷嚏可能是上呼吸道感染、猫疱疹病毒或过敏引起。如果伴随眼部分泌物增多...</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#999;">
+          <span>💬 张医生 · 今天</span>
+          <span>👍 86人有用</span>
+        </div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:16px;cursor:pointer;" onclick="alert('查看详细解答~')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="font-weight:800;font-size:14px;flex:1;">🍽️ 狗狗突然不吃饭是什么原因？</div>
+          <span style="background:#fef3c7;color:#d97706;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap;margin-left:8px;">已解答</span>
+        </div>
+        <div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:8px;">狗狗不吃饭原因多样：换粮、天气热、情绪问题或消化不良...</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#999;">
+          <span>💬 李医生 · 昨天</span>
+          <span>👍 124人有用</span>
+        </div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:16px;cursor:pointer;" onclick="alert('查看详细解答~')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="font-weight:800;font-size:14px;flex:1;">🪱 猫咪肚子里有虫怎么驱虫？</div>
+          <span style="background:#d1fae5;color:#059669;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap;margin-left:8px;">热门</span>
+        </div>
+        <div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:8px;">体内驱虫建议每3个月一次，可选用吡喹酮+芬苯达唑复方驱虫药...</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#999;">
+          <span>💬 张医生 · 2天前</span>
+          <span>👍 203人有用</span>
+        </div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:14px;padding:16px;cursor:pointer;" onclick="alert('查看详细解答~')">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <div style="font-weight:800;font-size:14px;flex:1;">🦴 狗狗爪子老是舔，是皮肤病吗？</div>
+          <span style="background:#fce7f3;color:#ec4899;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap;margin-left:8px;">待解答</span>
+        </div>
+        <div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:8px;">持续舔爪可能是食物过敏、环境过敏或真菌感染...</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#999;">
+          <span>🙋 王铲屎官 · 刚刚</span>
+          <button onclick="alert('🩺 回答功能开发中~');event.stopPropagation();" style="background:#9333ea;color:#fff;border:none;border-radius:10px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer;">我来回答</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 直播页 ============ -->
+<div class="page" id="page-live">
+  <div style="padding:16px;">
+    <div style="font-size:20px;font-weight:800;margin-bottom:4px;">📺 宠物直播</div>
+    <div style="font-size:13px;color:#999;margin-bottom:16px;">看看别人家的毛孩子 🎥</div>
+
+    <!-- 直播间列表 -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
+
+      <!-- 直播卡片 1 -->
+      <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(147,51,234,0.1);cursor:pointer;" onclick="alert('🔴 正在进入直播间...')">
+        <div style="position:relative;height:200px;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:96px;">🐱</div>
+        <div style="position:absolute;top:0;left:0;right:0;height:200px;pointer-events:none;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,0.5) 100%);border-radius:16px 16px 0 0;margin:0;padding:12px 12px 0;box-sizing:border-box;">
+          <div style="position:absolute;top:12px;left:12px;background:#ef4444;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;">🔴 直播中 · 2.3万</div>
+        </div>
+        <div style="padding:14px;">
+          <div style="font-size:15px;font-weight:800;margin-bottom:6px;">🐱 橘猫三兄弟的24小时日常</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;">喵</div>
+            <div style="font-size:13px;color:#666;">三橘之家 · 铲屎官博主</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span style="background:#fce7f3;color:#ec4899;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">#橘猫</span>
+            <span style="background:#ede9fe;color:#9333ea;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">#猫咪日常</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 直播卡片 2 -->
+      <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(147,51,234,0.1);cursor:pointer;" onclick="alert('🔴 正在进入直播间...')">
+        <div style="position:relative;">
+          <div style="height:200px;background:linear-gradient(135deg,#06b6d4,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:96px;">🐕</div>
+          <div style="position:absolute;top:12px;left:12px;background:#ef4444;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">🔴 直播中 · 8,456</div>
+        </div>
+        <div style="padding:14px;">
+          <div style="font-size:15px;font-weight:800;margin-bottom:6px;">🦮 萌宠生活馆 每日好物直播</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;">店</div>
+            <div style="font-size:13px;color:#666;">萌宠生活馆官方</div>
+          </div>
+          <div style="background:#fef9ec;border-radius:10px;padding:10px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:13px;color:#666;">🛍️ 正在直播：比瑞吉狗粮 10kg</div>
+            <div style="color:#ef4444;font-weight:800;font-size:16px;">¥238 <span style="font-size:11px;color:#999;text-decoration:line-through;">¥268</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 直播卡片 3 -->
+      <div style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(147,51,234,0.1);cursor:pointer;" onclick="alert('🔴 正在进入直播间...')">
+        <div style="position:relative;">
+          <div style="height:200px;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:96px;">🩺</div>
+          <div style="position:absolute;top:12px;left:12px;background:#ef4444;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">🔴 直播中 · 1.1万</div>
+        </div>
+        <div style="padding:14px;">
+          <div style="font-size:15px;font-weight:800;margin-bottom:6px;">💊 萌爪诊所 宠物健康公开课</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;">医</div>
+            <div style="font-size:13px;color:#666;">张医生 · 执业兽医师</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span style="background:#d1fae5;color:#059669;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">#宠物医疗</span>
+            <span style="background:#ede9fe;color:#9333ea;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">#健康科普</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ 我的页面 ============ -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <div class="profile-user">
+      <div class="avatar" onclick="loginOrProfile()">🐶</div>
+      <div class="user-info" id="profileUserInfo">
+        <div class="name" id="profileName">萌宠用户</div>
+        <div class="phone" id="profilePhone">138****8888</div>
+      </div>
+    </div>
+    <div class="user-stats">
+      <div class="user-stat"><div class="num">3</div><div class="label">优惠券</div></div>
+      <div class="user-stat"><div class="num">288</div><div class="label">积分</div></div>
+      <div class="user-stat"><div class="num" id="orderCount">5</div><div class="label">订单</div></div>
+      <div class="user-stat"><div class="num">2</div><div class="label">收藏</div></div>
+    </div>
+  </div>
+  <div class="coupon-bar"><span class="coupon-title">🎫 我的优惠券</span><span class="coupon-count">3张可用 ›</span></div>
+
+  <!-- 🏥 宠物健康卡 醒目入口 -->
+  <div onclick="showPetHealthCard()" style="margin:0 12px 12px;background:linear-gradient(135deg,#9333ea 0%,#c026d3 50%,#ec4899 100%);border-radius:18px;padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;box-shadow:0 6px 24px rgba(147,51,234,0.35);position:relative;overflow:hidden;">
+    <div style="position:absolute;right:-10px;top:-10px;font-size:90px;opacity:0.12;">🐾</div>
+    <div style="width:54px;height:54px;border-radius:16px;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">🏥</div>
+    <div style="flex:1;position:relative;z-index:1;">
+      <div style="font-size:17px;font-weight:800;color:#fff;margin-bottom:3px;">我的宠物健康卡</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.85);">生成专属健康档案 · 疫苗/驱虫/体检记录</div>
+    </div>
+    <div style="color:rgba(255,255,255,0.7);font-size:20px;position:relative;z-index:1;">›</div>
+  </div>
+
+  <div class="menu-group">
+    <div class="menu-row" onclick="alert('📦 订单功能开发中~')">
+      <span class="menu-row-icon">📦</span><span class="menu-row-text">我的订单</span>
+      <span class="menu-row-badge">2</span><span class="menu-row-arrow">›</span>
+    </div>
+    <div class="menu-row" onclick="openMapPage()">
+      <span class="menu-row-icon">📍</span><span class="menu-row-text">宠物地址</span>
+      <span class="menu-row-sub" id="profileAddrSub">萌宠小区</span><span class="menu-row-arrow">›</span>
+    </div>
+    <div class="menu-row" onclick="requireLogin()">
+      <span class="menu-row-icon">⭐</span><span class="menu-row-text">我的评价</span><span class="menu-row-arrow">›</span>
+    </div>
+  </div>
+  <div class="menu-group">
+    <div class="menu-row" onclick="showToast('客服功能开发中...')">
+      <span class="menu-row-icon">🎧</span><span class="menu-row-text">联系客服</span><span class="menu-row-arrow">›</span>
+    </div>
+    <div class="menu-row" id="loginLogoutRow" onclick="toggleLoginLogout()">
+      <span class="menu-row-icon">🔐</span><span class="menu-row-text" id="loginLogoutText">登录 / 注册</span><span class="menu-row-arrow">›</span>
+    </div>
+    <div class="menu-row" onclick="showToast('关于我们开发中...')">
+      <span class="menu-row-icon">ℹ️</span><span class="menu-row-text">关于萌宠生活</span><span class="menu-row-arrow">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 底部导航 ============ -->
+<div class="tab-bar">
+  <div class="tab-item active" id="tab-0" onclick="switchTab(0)"><div class="tab-icon">🏠</div><div class="tab-label">首页</div></div>
+  <div class="tab-item" id="tab-1" onclick="switchTab(1)"><div class="tab-icon">🐱</div><div class="tab-label">宠物</div></div>
+  <div class="tab-item tab-center" id="tab-4" onclick="switchTab(4)">
+    <div class="tab-center-btn"><div class="tab-icon">🐾</div></div>
+    <div class="tab-label">我的</div>
+  </div>
+  <div class="tab-item" id="tab-2" onclick="switchTab(2)"><div class="tab-icon">💬</div><div class="tab-label">社区</div></div>
+  <div class="tab-item" id="tab-3" onclick="switchTab(3)"><div class="tab-icon">📺</div><div class="tab-label">直播</div></div>
+</div>
+
+<!-- 购物车悬浮 -->
+<div class="cart-float hidden" id="cartFloat" onclick="showCartSheet()">
+  <div class="cart-icon-wrap">
+    <span class="cart-icon">🛒</span>
+    <div class="cart-count-badge" id="cartBadge">0</div>
+  </div>
+  <div class="cart-price">
+    <div class="cart-total" id="cartTotal">¥0.00</div>
+    <div class="cart-min-info">配送费 ¥0 · 距起送还差<span id="cartGap">--</span>元</div>
+  </div>
+  <button class="cart-submit" id="cartSubmit" onclick="checkout(event)">去结算</button>
+</div>
+
+<!-- 购物车弹窗 -->
+<div class="overlay" id="cartOverlay" onclick="closeCartSheet(event)">
+  <div class="bottom-sheet">
+    <div class="sheet-title">🛒 购物车</div>
+    <div class="cart-list" id="cartListContent"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:13px;color:#999">配送费 ¥0</span>
+      <span style="font-size:15px;font-weight:700;color:#9333ea">合计 <span id="cartTotalSheet">¥0</span></span>
+    </div>
+    <button class="checkout-btn" onclick="checkout(event)">去结算 →</button>
+  </div>
+</div>
+
+<!-- ============ 宠物出行弹窗 ============ -->
+<div class="overlay" id="petTravelModal" onclick="if(event.target===this)closePetTravel()"  >
+  <div class="bottom-sheet" style="max-height:80vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="sheet-title" style="margin-bottom:0;">🚗 宠物出行</div>
+      <div onclick="closePetTravel()" style="font-size:22px;cursor:pointer;color:#999;">✕</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="background:linear-gradient(135deg,#f5f0ff,#ede9fe);border-radius:14px;padding:16px;text-align:center;cursor:pointer;" onclick="showToast('🚕 宠物专车预约中...')">
+        <div style="font-size:36px;margin-bottom:6px;">🚕</div>
+        <div style="font-weight:800;font-size:14px;">宠物专车</div>
+        <div style="font-size:12px;color:#9333ea;margin-top:2px;">宠物友好司机</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-radius:14px;padding:16px;text-align:center;cursor:pointer;" onclick="showToast('🚂 宠物托运开发中...')">
+        <div style="font-size:36px;margin-bottom:6px;">🚂</div>
+        <div style="font-weight:800;font-size:14px;">宠物托运</div>
+        <div style="font-size:12px;color:#059669;margin-top:2px;">安全专业托运</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border-radius:14px;padding:16px;text-align:center;cursor:pointer;" onclick="showToast('✈️ 宠物航空开发中...')">
+        <div style="font-size:36px;margin-bottom:6px;">✈️</div>
+        <div style="font-weight:800;font-size:14px;">宠物航空</div>
+        <div style="font-size:12px;color:#d97706;margin-top:2px;">国内航班随行</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#fce7f3,#fbcfe8);border-radius:14px;padding:16px;text-align:center;cursor:pointer;" onclick="showToast('🏕️ 宠物旅行开发中...')">
+        <div style="font-size:36px;margin-bottom:6px;">🏕️</div>
+        <div style="font-weight:800;font-size:14px;">宠物旅行</div>
+        <div style="font-size:12px;color:#ec4899;margin-top:2px;">宠物友好民宿</div>
+      </div>
+    </div>
+    <div style="background:#f5f0ff;border-radius:12px;padding:12px 14px;font-size:12px;color:#9333ea;line-height:1.6;">
+      🐾 温馨提示：乘车前请准备宠物健康证明，部分服务需提前预约。出行请携带宠物便携包保障安全。
+    </div>
+  </div>
+</div>
+
+<!-- ============ 微信登录引导弹窗 ============ -->
+<div class="overlay" id="wechatLoginModal" onclick="if(event.target===this)closeWechatLoginModal()">
+  <div class="bottom-sheet">
+    <div style="text-align:center;padding-bottom:8px;">
+      <div style="font-size:60px;margin-bottom:8px;">🟢</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px;">微信授权登录</div>
+      <div style="font-size:13px;color:#999;margin-bottom:20px;line-height:1.6;">
+        点击「授权登录」将跳转微信官方授权页<br>获取您的微信头像和昵称，安全可靠
+      </div>
+      <div style="background:#f0fdf4;border-radius:12px;padding:12px 16px;text-align:left;margin-bottom:16px;font-size:12px;color:#059669;line-height:1.8;">
+        ✅ 获取：头像、昵称（基础信息）<br>
+        ✅ 安全：不获取手机号等敏感信息<br>
+        ✅ 合规：符合微信平台开发规范<br>
+        ⚙️ 需配置：公众号/小程序 AppID + 服务器域名
+      </div>
+      <button onclick="confirmWechatLogin()" style="width:100%;background:linear-gradient(135deg,#07c160,#05a04e);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+        🟢 授权登录
+      </button>
+      <button onclick="closeWechatLoginModal()" style="width:100%;background:#f5f5f5;color:#666;border:none;border-radius:12px;padding:12px;font-size:14px;cursor:pointer;">
+        暂不授权
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 微信支付引导弹窗 ============ -->
+<div class="overlay" id="wechatPayModal" onclick="if(event.target===this)closeWechatPayModal()">
+  <div class="bottom-sheet">
+    <div style="text-align:center;padding-bottom:8px;">
+      <div style="font-size:56px;margin-bottom:8px;">💚</div>
+      <div style="font-size:18px;font-weight:800;margin-bottom:6px;">微信支付</div>
+      <div id="wechatPayQRArea" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border-radius:16px;padding:20px;margin-bottom:14px;">
+        <div style="width:160px;height:160px;margin:0 auto;background:#fff;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,0.1);">
+          <div style="font-size:60px;">📱</div>
+          <div style="font-size:11px;color:#999;margin-top:6px;text-align:center;">微信扫码支付<br>（演示二维码）</div>
+        </div>
+        <div style="font-size:13px;color:#059669;margin-top:10px;">请打开微信扫一扫完成支付</div>
+      </div>
+      <div style="background:#fff7ed;border-radius:10px;padding:10px 14px;font-size:12px;color:#d97706;margin-bottom:14px;text-align:left;line-height:1.8;">
+        ⚙️ 对接说明：<br>
+        1. 商户号注册：<a href="https://pay.weixin.qq.com" style="color:#9333ea;">pay.weixin.qq.com</a><br>
+        2. 配置 API 密钥 + 证书<br>
+        3. 后端调用统一下单接口获取 prepay_id<br>
+        4. 前端调用 wx.chooseWXPay() 唤起支付
+      </div>
+      <button onclick="confirmWechatPay()" style="width:100%;background:linear-gradient(135deg,#07c160,#05a04e);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+        ✅ 已完成支付
+      </button>
+      <button onclick="closeWechatPayModal()" style="width:100%;background:#f5f5f5;color:#666;border:none;border-radius:12px;padding:12px;font-size:14px;cursor:pointer;">
+        取消支付
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 宠物健康卡弹窗 ============ -->
+<div class="overlay" id="petHealthCardModal" onclick="if(event.target===this)closePetHealthCard()">
+  <div class="bottom-sheet" style="max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="sheet-title" style="margin-bottom:0;">🏥 宠物健康卡</div>
+      <div onclick="closePetHealthCard()" style="font-size:22px;cursor:pointer;color:#999;">✕</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <div style="font-size:12px;color:#999;margin-bottom:4px;">宠物昵称</div>
+          <input id="hcPetName" type="text" placeholder="例：毛毛" style="width:100%;border:2px solid #e9d5ff;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;" onfocus="this.style.borderColor='#9333ea'" onblur="this.style.borderColor='#e9d5ff'">
+        </div>
+        <div>
+          <div style="font-size:12px;color:#999;margin-bottom:4px;">宠物类型</div>
+          <select id="hcPetType" style="width:100%;border:2px solid #e9d5ff;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;background:#fff;">
+            <option>猫咪</option><option>狗狗</option><option>兔子</option><option>仓鼠</option><option>其他</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#999;margin-bottom:4px;">品种</div>
+          <input id="hcPetBreed" type="text" placeholder="例：橘猫" style="width:100%;border:2px solid #e9d5ff;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;" onfocus="this.style.borderColor='#9333ea'" onblur="this.style.borderColor='#e9d5ff'">
+        </div>
+        <div>
+          <div style="font-size:12px;color:#999;margin-bottom:4px;">年龄</div>
+          <input id="hcPetAge" type="text" placeholder="例：2岁" style="width:100%;border:2px solid #e9d5ff;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;" onfocus="this.style.borderColor='#9333ea'" onblur="this.style.borderColor='#e9d5ff'">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:#999;margin-bottom:4px;">体重</div>
+        <input id="hcPetWeight" type="text" placeholder="例：4.5kg" style="width:100%;border:2px solid #e9d5ff;border-radius:10px;padding:10px 12px;font-size:14px;outline:none;" onfocus="this.style.borderColor='#9333ea'" onblur="this.style.borderColor='#e9d5ff'">
+      </div>
+    </div>
+    <button onclick="generateHealthCard()" style="width:100%;background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-bottom:4px;">
+      🐾 生成我的宠物健康卡
+    </button>
+    <div id="hcCardResult"></div>
+  </div>
+</div>
+
+<!-- ============ 消息中心页面 ============ -->
+<div class="overlay" id="msgPageOverlay" style="align-items:stretch;z-index:200;" onclick="if(event.target===this)closeMsgPage()">
+  <div style="background:#f5f5f5;width:100%;max-width:480px;height:100%;display:flex;flex-direction:column;position:relative;" class="fullscreen-page">
+    <!-- 消息页头部 -->
+    <div style="background:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #f0e8ff;flex-shrink:0;">
+      <div onclick="closeMsgPage()" style="font-size:22px;cursor:pointer;color:#666;">‹</div>
+      <div style="font-size:17px;font-weight:800;flex:1;">消息</div>
+      <div onclick="createGroup()" style="font-size:22px;cursor:pointer;" title="发起群聊">➕</div>
+    </div>
+    <!-- 消息Tab：私信/群聊 -->
+    <div style="background:#fff;display:flex;border-bottom:2px solid #f5f0ff;flex-shrink:0;">
+      <div id="msg-tab-0" onclick="switchMsgTab(0)" style="flex:1;text-align:center;padding:11px 0;font-size:14px;font-weight:700;color:#9333ea;border-bottom:2px solid #9333ea;margin-bottom:-2px;cursor:pointer;">💌 私信</div>
+      <div id="msg-tab-1" onclick="switchMsgTab(1)" style="flex:1;text-align:center;padding:11px 0;font-size:14px;font-weight:600;color:#999;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;">👥 群聊</div>
+    </div>
+    <!-- 消息列表容器 -->
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <!-- 私信列表 -->
+      <div id="msg-panel-0">
+        <!-- 私信1 -->
+        <div onclick="openChatWindow('橘猫宝妈','喵','linear-gradient(135deg,#9333ea,#c026d3)')" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:background 0.15s;active:background:#f9f5ff;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:800;">喵</div>
+            <div style="position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;border:2px solid #f5f5f5;">2</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:15px;font-weight:700;">橘猫宝妈</div>
+              <div style="font-size:11px;color:#bbb;">10:23</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">哈哈我家橘猫也是这样的，太有共鸣了！</div>
+          </div>
+        </div>
+        <!-- 私信2 -->
+        <div onclick="openChatWindow('张医生','张','linear-gradient(135deg,#10b981,#059669)')" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:800;">张</div>
+            <div style="position:absolute;top:-2px;right:-2px;width:14px;height:14px;background:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;border:2px solid #f5f5f5;">1</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="display:flex;align-items:center;gap:4px;"><div style="font-size:15px;font-weight:700;">张医生</div><span style="background:#d1fae5;color:#059669;font-size:10px;font-weight:700;border-radius:6px;padding:1px 5px;">医生</span></div>
+              <div style="font-size:11px;color:#bbb;">昨天</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">关于您家狗狗的耳螨问题，建议这样处理...</div>
+          </div>
+        </div>
+        <!-- 私信3 -->
+        <div onclick="openChatWindow('柴犬爸爸Leo','汪','linear-gradient(135deg,#06b6d4,#0ea5e9)')" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#06b6d4,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:800;flex-shrink:0;">汪</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:15px;font-weight:700;">柴犬爸爸Leo</div>
+              <div style="font-size:11px;color:#bbb;">2天前</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">谢谢你的经验分享，我也去试试那个驱虫药</div>
+          </div>
+        </div>
+        <!-- 私信4 -->
+        <div onclick="openChatWindow('垂耳兔小雪的妈','兔','linear-gradient(135deg,#f59e0b,#f97316)')" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;font-weight:800;flex-shrink:0;">兔</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:15px;font-weight:700;">垂耳兔小雪的妈</div>
+              <div style="font-size:11px;color:#bbb;">3天前</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">[图片] 这是我自制的磨牙棒，效果不错哦</div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:24px 0;color:#ccc;font-size:12px;">— 没有更多私信了 —</div>
+      </div>
+      <!-- 群聊列表 -->
+      <div id="msg-panel-1" style="display:none;">
+        <!-- 群聊1 -->
+        <div onclick="openChatWindow('🐾萌宠铲屎官交流群','群','linear-gradient(135deg,#9333ea,#c026d3)',true)" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <div style="position:relative;flex-shrink:0;">
+            <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:26px;">🐾</div>
+            <div style="position:absolute;top:-2px;right:-2px;width:16px;height:16px;background:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;border:2px solid #f5f5f5;">9+</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:15px;font-weight:700;">萌宠铲屎官交流群</div>
+              <div style="font-size:11px;color:#bbb;">刚刚</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">橘猫宝妈：哈哈今天又喂猫咪零食啦！</div>
+            <div style="font-size:11px;color:#bbb;margin-top:2px;">128人 · 活跃群</div>
+          </div>
+        </div>
+        <!-- 群聊2 -->
+        <div onclick="openChatWindow('🐕柴犬宠友圈','犬','linear-gradient(135deg,#06b6d4,#0ea5e9)',true)" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <div style="flex-shrink:0;">
+            <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#06b6d4,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:26px;">🐕</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:15px;font-weight:700;">柴犬宠友圈</div>
+              <div style="font-size:11px;color:#bbb;">10分钟前</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Leo：大家有推荐的耳螨药吗？</div>
+            <div style="font-size:11px;color:#bbb;margin-top:2px;">56人</div>
+          </div>
+        </div>
+        <!-- 群聊3 -->
+        <div onclick="openChatWindow('🐱猫猫健康互助群','猫','linear-gradient(135deg,#ec4899,#f43f5e)',true)" style="background:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #f5f5f5;cursor:pointer;">
+          <div style="flex-shrink:0;">
+            <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#ec4899,#f43f5e);display:flex;align-items:center;justify-content:center;font-size:26px;">🐱</div>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;">
+              <div style="font-size:15px;font-weight:700;">猫猫健康互助群</div>
+              <div style="font-size:11px;color:#bbb;">1小时前</div>
+            </div>
+            <div style="font-size:13px;color:#999;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">张医生：如遇紧急情况请第一时间去线下...</div>
+            <div style="font-size:11px;color:#bbb;margin-top:2px;">243人 · 有医生坐诊</div>
+          </div>
+        </div>
+        <!-- 新建群聊按钮 -->
+        <div onclick="createGroup()" style="margin:16px;background:linear-gradient(135deg,#9333ea,#c026d3);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+          <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;">➕</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#fff;">发起群聊</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.8);">邀请宠物朋友一起聊天</div>
+          </div>
+        </div>
+        <div style="text-align:center;padding:8px 0 24px;color:#ccc;font-size:12px;">— 没有更多群聊了 —</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 聊天窗口 ============ -->
+<div class="overlay" id="chatWindow" style="align-items:stretch;z-index:350;">
+  <div style="background:#f5f5f5;width:100%;max-width:480px;height:100%;display:flex;flex-direction:column;" class="fullscreen-page">
+    <!-- 聊天头部 -->
+    <div style="background:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #f0f0f0;flex-shrink:0;">
+      <div onclick="closeChatWindow()" style="font-size:24px;cursor:pointer;color:#666;line-height:1;">‹</div>
+      <div id="chatAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#c026d3);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;font-weight:800;flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div id="chatName" style="font-size:15px;font-weight:700;"></div>
+        <div id="chatSub" style="font-size:11px;color:#999;"></div>
+      </div>
+      <div onclick="alert('更多功能开发中~')" style="font-size:20px;cursor:pointer;color:#999;">⋯</div>
+    </div>
+    <!-- 聊天消息区 -->
+    <div id="chatMsgs" style="flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch;">
+    </div>
+    <!-- 输入框 -->
+    <div style="background:#fff;padding:10px 12px;display:flex;align-items:center;gap:8px;border-top:1px solid #f0f0f0;flex-shrink:0;">
+      <div onclick="alert('表情功能开发中~')" style="font-size:24px;cursor:pointer;">😊</div>
+      <input id="chatInput" type="text" placeholder="说点什么..." style="flex:1;border:1px solid #e5e5e5;border-radius:20px;padding:9px 14px;font-size:14px;outline:none;background:#f9f9f9;" onkeydown="if(event.key==='Enter')sendChatMsg()">
+      <div onclick="alert('图片发送功能开发中~')" style="font-size:22px;cursor:pointer;">🖼️</div>
+      <button onclick="sendChatMsg()" style="background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">发送</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 发帖弹窗 ============ -->
+<div class="overlay" id="postModal" onclick="if(event.target===this)closePostModal()">
+  <div class="bottom-sheet" style="max-height:85vh;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:800;">✏️ 发布帖子</div>
+      <div onclick="closePostModal()" style="font-size:22px;color:#999;cursor:pointer;">✕</div>
+    </div>
+    <textarea id="postContent" placeholder="分享你和毛孩子的故事..." style="width:100%;border:1px solid #e5e5e5;border-radius:12px;padding:12px;font-size:14px;outline:none;resize:none;line-height:1.7;min-height:100px;font-family:inherit;"></textarea>
+    <div style="display:flex;gap:8px;margin:12px 0;flex-wrap:wrap;">
+      <div style="background:#fce7f3;color:#ec4899;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;" onclick="addTopic(this,'#晒宠')">#晒宠</div>
+      <div style="background:#ede9fe;color:#9333ea;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;" onclick="addTopic(this,'#求助')">#求助</div>
+      <div style="background:#d1fae5;color:#059669;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;" onclick="addTopic(this,'#日常')">#日常</div>
+      <div style="background:#fef3c7;color:#d97706;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;" onclick="addTopic(this,'#美食')">#美食</div>
+      <div style="background:#fce7f3;color:#db2777;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;" onclick="addTopic(this,'#搞笑')">#搞笑</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <div onclick="alert('选图功能开发中~')" style="width:72px;height:72px;border:2px dashed #ddd;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
+        <span style="font-size:24px;">📷</span>
+        <span style="font-size:10px;color:#999;">添加图片</span>
+      </div>
+    </div>
+    <button onclick="submitPost()" style="width:100%;background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;">发布</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ==============================================
+     登录/注册 页面
+     ============================================== -->
+<div class="login-page" id="loginPage">
+  <div class="login-close" onclick="closeLoginPage()">✕</div>
+  <div class="login-header">
+    <div class="login-logo">🐾</div>
+    <div class="login-title">萌宠生活</div>
+    <div class="login-sub">登录后享受更多宠物福利</div>
+  </div>
+  <div class="login-body">
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="switchLoginTab(this,0)" id="loginTabPhone">手机号登录</div>
+      <div class="login-tab" onclick="switchLoginTab(this,1)" id="loginTabPwd">密码登录</div>
+      <div class="login-tab" onclick="switchLoginTab(this,2)" id="loginTabReg">注册账号</div>
+    </div>
+
+    <!-- 手机号+验证码 -->
+    <div id="loginFormPhone">
+      <div class="input-group">
+        <div class="input-label">手机号</div>
+        <div class="input-wrap">
+          <span class="input-prefix">+86</span>
+          <input type="tel" id="phoneInput" placeholder="请输入手机号" maxlength="11" oninput="onPhoneInput()">
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">验证码</div>
+        <div class="input-wrap">
+          <input type="text" id="codeInput" placeholder="请输入验证码" maxlength="6" style="letter-spacing:4px">
+          <span class="input-suffix-btn disabled" id="sendCodeBtn" onclick="sendCode()">获取验证码</span>
+        </div>
+      </div>
+      <button class="login-btn" onclick="doLogin('phone')">一键登录</button>
+    </div>
+
+    <!-- 密码登录 -->
+    <div id="loginFormPwd" style="display:none">
+      <div class="input-group">
+        <div class="input-label">手机号</div>
+        <div class="input-wrap">
+          <span class="input-prefix">+86</span>
+          <input type="tel" id="pwdPhoneInput" placeholder="请输入手机号" maxlength="11">
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">密码</div>
+        <div class="input-wrap">
+          <input type="password" id="pwdInput" placeholder="请输入密码">
+          <span class="input-suffix-btn" onclick="togglePwd()">👁</span>
+        </div>
+      </div>
+      <button class="login-btn" onclick="doLogin('pwd')">登录</button>
+    </div>
+
+    <!-- 注册 -->
+    <div id="loginFormReg" style="display:none">
+      <div class="input-group">
+        <div class="input-label">手机号</div>
+        <div class="input-wrap">
+          <span class="input-prefix">+86</span>
+          <input type="tel" id="regPhoneInput" placeholder="请输入手机号" maxlength="11" oninput="onRegPhoneInput()">
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">设置密码</div>
+        <div class="input-wrap">
+          <input type="password" id="regPwdInput" placeholder="6-16位字母或数字">
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-label">验证码</div>
+        <div class="input-wrap">
+          <input type="text" id="regCodeInput" placeholder="请输入验证码" maxlength="6" style="letter-spacing:4px">
+          <span class="input-suffix-btn disabled" id="sendRegCodeBtn" onclick="sendRegCode()">获取验证码</span>
+        </div>
+      </div>
+      <button class="login-btn" onclick="doLogin('reg')">立即注册</button>
+    </div>
+
+    <div class="login-divider"><span>其他方式登录</span></div>
+    <div class="third-party">
+      <div class="third-btn" onclick="doWechatLogin()">
+        <div class="third-icon" style="background:#07c160">🟢</div>
+        <span class="third-label">微信</span>
+      </div>
+      <div class="third-btn" onclick="doThirdLogin('alipay')">
+        <div class="third-icon" style="background:#1677ff">💙</div>
+        <span class="third-label">支付宝</span>
+      </div>
+      <div class="third-btn" onclick="doThirdLogin('apple')">
+        <div class="third-icon" style="background:#000">🍎</div>
+        <span class="third-label">Apple</span>
+      </div>
+    </div>
+    <div class="login-agree">登录即代表同意 <a>《用户协议》</a> 和 <a>《隐私政策》</a></div>
+  </div>
+</div>
+
+<!-- ==============================================
+     地图定位页面
+     ============================================== -->
+<div class="map-page" id="mapPage">
+  <div class="map-header">
+    <span class="map-back" onclick="closeMapPage()">‹</span>
+    <div class="map-search-box">
+      <span>🔍</span>
+      <input type="text" placeholder="搜索小区、写字楼、街道..." oninput="searchAddress(this.value)" id="mapSearchInput">
+    </div>
+  </div>
+  <div class="map-canvas" id="mapCanvas">
+    <div class="map-bg"></div>
+    <div class="map-road-h" style="top:30%"></div>
+    <div class="map-road-h" style="top:55%"></div>
+    <div class="map-road-h" style="top:80%"></div>
+    <div class="map-road-v" style="left:25%"></div>
+    <div class="map-road-v" style="left:55%"></div>
+    <div class="map-road-v" style="left:80%"></div>
+    <div class="map-block" style="left:5%;top:5%;width:18%;height:23%"></div>
+    <div class="map-block" style="left:28%;top:5%;width:25%;height:23%"></div>
+    <div class="map-block" style="left:57%;top:5%;width:21%;height:23%"></div>
+    <div class="map-block" style="left:5%;top:33%;width:18%;height:20%"></div>
+    <div class="map-block" style="left:28%;top:33%;width:25%;height:20%"></div>
+    <div class="map-block" style="left:57%;top:33%;width:21%;height:20%"></div>
+    <div class="map-block" style="left:5%;top:57%;width:18%;height:20%"></div>
+    <div class="map-block" style="left:57%;top:57%;width:21%;height:20%"></div>
+    <div class="map-park" style="left:28%;top:57%;width:25%;height:20%">🌳 宠物公园</div>
+    <div class="locating-ring" id="locatingRing"></div>
+    <div class="map-pin" id="mapPin"><div class="map-pin-icon">📍</div></div>
+    <div class="locating-overlay" id="locatingOverlay">
+      <div class="locating-box">
+        <div class="locating-spinner">🔍</div>
+        <div class="locating-text">正在获取您的位置...</div>
+      </div>
+    </div>
+    <div class="map-locate-btn" onclick="relocate()">🎯</div>
+  </div>
+  <div class="map-bottom">
+    <div class="map-current-location">
+      <span class="map-loc-icon">📍</span>
+      <div class="map-loc-info">
+        <div class="map-loc-name" id="mapLocName">萌宠小区</div>
+        <div class="map-loc-addr" id="mapLocAddr">四川省成都市锦江区萌宠路88号</div>
+      </div>
+      <button class="map-use-btn" onclick="useCurrentLocation()">使用此地址</button>
+    </div>
+    <div class="map-addr-list" id="mapAddrList"></div>
+  </div>
+</div>
+
+<!-- ==============================================
+     确认订单页面
+     ============================================== -->
+<div class="confirm-page" id="confirmPage">
+  <div class="confirm-header">
+    <span class="confirm-back" onclick="closeConfirmPage()">‹</span>
+    <span class="confirm-title">确认订单</span>
+  </div>
+  <div class="confirm-body">
+    <div class="confirm-card">
+      <div class="confirm-addr-row" onclick="openMapPage()">
+        <span class="confirm-addr-icon">📍</span>
+        <div class="confirm-addr-info">
+          <div class="confirm-addr-name" id="confirmAddrName">萌宠小区</div>
+          <div class="confirm-addr-detail" id="confirmAddrDetail">四川省成都市锦江区萌宠路88号</div>
+        </div>
+        <span class="confirm-addr-arrow">›</span>
+      </div>
+    </div>
+    <div class="confirm-card">
+      <div class="confirm-shop-row">
+        <span class="confirm-shop-emoji" id="confirmShopEmoji">🍖</span>
+        <span class="confirm-shop-name" id="confirmShopName">店铺名称</span>
+      </div>
+      <div id="confirmItemList"></div>
+      <div class="confirm-fee-row"><span class="confirm-fee-label">配送费</span><span class="confirm-fee-val">¥0.00</span></div>
+      <div class="confirm-total-row">
+        <span class="confirm-total-label">合计</span>
+        <span class="confirm-total-val" id="confirmTotal">¥0.00</span>
+      </div>
+    </div>
+    <div class="confirm-card">
+      <div class="confirm-time-row">
+        <span class="confirm-time-label">🕐 预计送达</span>
+        <span class="confirm-time-val" id="confirmETA">约25分钟</span>
+      </div>
+    </div>
+    <div class="confirm-card">
+      <div class="confirm-remark">
+        <input type="text" placeholder="备注：宠物名字、特殊需求..." id="remarkInput">
+      </div>
+    </div>
+  </div>
+  <div class="confirm-footer">
+    <div class="confirm-footer-total">合计 <strong id="confirmFooterTotal">¥0</strong></div>
+    <button class="confirm-pay-btn" onclick="openPayPage()">去支付</button>
+  </div>
+</div>
+
+<!-- ==============================================
+     支付收银台
+     ============================================== -->
+<div class="pay-page" id="payPage">
+  <div class="pay-header">
+    <span class="pay-back" onclick="closePayPage()">‹</span>
+    <span class="pay-header-title">收银台</span>
+  </div>
+  <div class="pay-amount-box">
+    <div class="pay-amount-label">需付金额（元）</div>
+    <div class="pay-amount-num"><span class="unit">¥</span><span id="payAmount">0.00</span></div>
+  </div>
+  <div class="pay-body">
+    <div class="pay-section-title">选择支付方式</div>
+    <div class="pay-methods">
+      <div class="pay-method-item" onclick="selectPayMethod(0)">
+        <span class="pay-method-icon">💚</span>
+        <div class="pay-method-info">
+          <div class="pay-method-name">微信支付</div>
+          <div class="pay-method-sub">推荐 · 安全快捷</div>
+        </div>
+        <div class="pay-radio selected" id="payRadio0"></div>
+      </div>
+      <div class="pay-method-item" onclick="selectPayMethod(1)">
+        <span class="pay-method-icon">💙</span>
+        <div class="pay-method-info">
+          <div class="pay-method-name">支付宝</div>
+          <div class="pay-method-sub">花呗分期可用</div>
+        </div>
+        <div class="pay-radio" id="payRadio1"></div>
+      </div>
+      <div class="pay-method-item" onclick="selectPayMethod(2)">
+        <span class="pay-method-icon">💳</span>
+        <div class="pay-method-info">
+          <div class="pay-method-name">银行卡</div>
+          <div class="pay-method-sub">支持储蓄卡/信用卡</div>
+        </div>
+        <div class="pay-radio" id="payRadio2"></div>
+      </div>
+      <div class="pay-method-item" onclick="selectPayMethod(3)">
+        <span class="pay-method-icon">🏦</span>
+        <div class="pay-method-info">
+          <div class="pay-method-name">余额支付</div>
+          <div class="pay-method-sub">可用余额 ¥88.00</div>
+        </div>
+        <div class="pay-radio" id="payRadio3"></div>
+      </div>
+    </div>
+    <div class="pay-section-title">订单信息</div>
+    <div class="pay-order-info">
+      <div class="pay-order-row"><span>订单编号</span><span id="payOrderNo">—</span></div>
+      <div class="pay-order-row"><span>商家</span><span id="payShopName">—</span></div>
+      <div class="pay-order-row"><span>配送地址</span><span id="payAddr">—</span></div>
+      <div class="pay-order-row"><span>预计到达</span><span id="payETA">—</span></div>
+      <div class="pay-order-row"><span>实付金额</span><span id="payTotalInfo" style="color:#9333ea">—</span></div>
+    </div>
+  </div>
+  <div class="pay-footer">
+    <button class="pay-submit-btn" onclick="submitPay()">立即支付</button>
+    <div class="pay-secure">🔒 支付安全由银联加密保护</div>
+  </div>
+</div>
+
+<!-- 支付中动画 -->
+<div class="paying-mask" id="payingMask">
+  <div class="paying-box">
+    <div class="paying-icon" id="payingIcon">💳</div>
+    <div class="paying-text" id="payingText">支付中...</div>
+    <div class="paying-sub">请稍候，正在处理您的订单</div>
+  </div>
+</div>
+
+<!-- 支付成功页 -->
+<div class="pay-success-page" id="paySuccessPage">
+  <div class="success-icon-wrap"><div class="success-icon">✓</div></div>
+  <div class="success-title">支付成功！</div>
+  <div class="success-sub">预计 <span id="successETA">25分钟</span> 送达</div>
+  <div class="success-order-no" id="successOrderNo">订单号：—</div>
+  <div class="success-timeline">
+    <div class="success-step">
+      <div class="step-dot"></div>
+      <div class="step-line"></div>
+      <div class="step-info"><div class="step-title">✅ 订单已下单</div><div class="step-time" id="stepTime1">—</div></div>
+    </div>
+    <div class="success-step">
+      <div class="step-dot" style="background:#ddd"></div>
+      <div class="step-line"></div>
+      <div class="step-info"><div class="step-title" style="color:#bbb">📦 商家备货中</div><div class="step-time">约5分钟</div></div>
+    </div>
+    <div class="success-step">
+      <div class="step-dot" style="background:#ddd"></div>
+      <div class="step-line"></div>
+      <div class="step-info"><div class="step-title" style="color:#bbb">🚚 配送小哥正在出发</div><div class="step-time">约15分钟</div></div>
+    </div>
+    <div class="success-step">
+      <div class="step-dot" style="background:#ddd"></div>
+      <div class="step-info"><div class="step-title" style="color:#bbb">🎉 即将送达</div><div class="step-time" id="successETA2">—</div></div>
+    </div>
+  </div>
+  <div class="success-actions" style="margin-top:24px">
+    <button class="success-btn outline" onclick="closeSuccessPage()">返回首页</button>
+    <button class="success-btn primary" onclick="viewOrder()">查看订单</button>
+  </div>
+</div>
+
+<script>
+// ===================================================================
+// 数据
+// ===================================================================
+const shops = [
+  { id:0, name:"🍖 萌宠鲜食馆", emoji:"🍖", bg:"linear-gradient(135deg,#9333ea,#c026d3)", rating:4.9, sales:"3.2k", time:"20分钟", fee:"¥0", minPrice:0, tags:["新鲜","天然","满减"], desc:"天然食材 · 无添加 · 营业中", menuCategories:["热销榜","狗粮专区","猫粮专区","零食冻干"], menu:[
+    {cat:0,name:"天然狗粮5斤装",desc:"鲜肉配方 营养均衡",price:68,emoji:"🍖"},
+    {cat:0,name:"进口猫罐头6罐",desc:"金枪鱼味 猫咪最爱",price:45,emoji:"🥫"},
+    {cat:1,name:"成犬鸡肉配方",desc:"适合1-8岁成犬",price:88,emoji:"🐶"},
+    {cat:1,name:"小型犬专用粮",desc:"小颗粒易咀嚼",price:56,emoji:"🐕"},
+    {cat:2,name:"英短成猫粮",desc:"高蛋白 低敏配方",price:72,emoji:"🐱"},
+    {cat:2,name:"布偶猫奶糕",desc:"幼猫离乳期专用",price:38,emoji:"😺"},
+    {cat:3,name:"鸡肉冻干零食",desc:"纯鸡胸肉 0添加",price:29,emoji:"🍗"},
+    {cat:3,name:"猫薄荷小鱼干",desc:"猫咪兴奋神器",price:18,emoji:"🐟"},
+  ]},
+  { id:1, name:"🛁 宠物美容SPA馆", emoji:"🛁", bg:"linear-gradient(135deg,#06b6d4,#0ea5e9)", rating:4.8, sales:"1.8k", time:"预约制", fee:"¥0", minPrice:0, tags:["专业","好评","洗护"], desc:"专业美容师 · 温和洗护 · 营业中", menuCategories:["热销","基础洗护","精致美容","医疗保健"], menu:[
+    {cat:0,name:"狗狗基础洗澡",desc:"沐浴+吹干+基础修剪",price:58,emoji:"🛁"},
+    {cat:0,name:"猫咪轻柔洗澡",desc:"专用猫咪洗护 温和不刺激",price:68,emoji:"🐱"},
+    {cat:1,name:"全身美容造型",desc:"洗澡+剪毛+造型+指甲修剪",price:128,emoji:"✨"},
+    {cat:1,name:"泰迪精致造型",desc:"泰迪专用 时尚造型",price:98,emoji:"🐩"},
+    {cat:2,name:"宠物体内驱虫",desc:"专业兽医操作",price:45,emoji:"💊"},
+    {cat:2,name:"宠物疫苗接种",desc:"进口疫苗 安全保障",price:120,emoji:"💉"},
+    {cat:3,name:"宠物耳道清洁",desc:"专业护理 预防耳螨",price:25,emoji:"👂"},
+    {cat:3,name:"宠物牙齿清洁",desc:"清新口气 口腔健康",price:35,emoji:"🦷"},
+  ]},
+  { id:2, name:"💊 萌爪宠物诊所", emoji:"💊", bg:"linear-gradient(135deg,#f59e0b,#f97316)", rating:4.7, sales:"950", time:"24小时营业", fee:"¥0", minPrice:0, tags:["24H","专业","信赖"], desc:"执业兽医 · 24小时急诊 · 营业中", menuCategories:["热销","诊疗服务","疫苗保健","体检套餐"], menu:[
+    {cat:0,name:"全身体检套餐",desc:"20项全面检查",price:199,emoji:"🏥"},
+    {cat:0,name:"皮肤疾病诊疗",desc:"专业皮肤科 快速确诊",price:80,emoji:"🔬"},
+    {cat:1,name:"猫三联疫苗",desc:"进口辉瑞 预防猫瘟",price:120,emoji:"💉"},
+    {cat:1,name:"狗八联疫苗",desc:"全面防护 抵御病毒",price:140,emoji:"🐕"},
+    {cat:1,name:"狂犬疫苗",desc:"合法养宠 必打疫苗",price:60,emoji:"⚠️"},
+    {cat:2,name:"年度健康体检",desc:"老年宠物专属 早发现早预防",price:299,emoji:"🩺"},
+    {cat:2,name:"幼宠基础体检",desc:"新到家宠物 全面筛查",price:88,emoji:"🐾"},
+    {cat:3,name:"体外驱虫药",desc:"进口福来恩 1支装",price:45,emoji:"🛡"},
+    {cat:3,name:"宠物营养膏",desc:"补充维生素 增强体质",price:38,emoji:"💊"},
+  ]},
+  { id:3, name:"🏠 萌宠生活馆", emoji:"🏠", bg:"linear-gradient(135deg,#10b981,#34d399)", rating:4.9, sales:"1.2k", time:"次日达", fee:"¥0", minPrice:0, tags:["包邮","品质","网红"], desc:"宠物用品一站式 · 品质保障 · 营业中", menuCategories:["热销","窝垫猫爬架","宠物服饰","出行装备"], menu:[
+    {cat:0,name:"猫咪半封闭式猫窝",desc:"冬暖夏凉 舒适睡眠",price:128,emoji:"🏠"},
+    {cat:0,name:"大型狗窝四季款",desc:"可拆洗 多尺寸可选",price:168,emoji:"🛏"},
+    {cat:1,name:"三层实木猫爬架",desc:"天然剑麻 结实耐用",price:258,emoji:"🌲"},
+    {cat:1,name:"猫咪隧道玩具",desc:"逗猫神器 消耗精力",price:48,emoji:"🎾"},
+    {cat:2,name:"狗狗休闲T恤",desc:"透气纯棉 夏季款",price:35,emoji:"👕"},
+    {cat:2,name:"猫咪圣诞装",desc:"节日拍照必备 萌翻全场",price:42,emoji:"🎄"},
+    {cat:3,name:"宠物外出航空箱",desc:"国标安全 托运级品质",price:168,emoji:"✈️"},
+    {cat:3,name:"狗狗牵引胸背带",desc:"防爆冲 人体工学",price:65,emoji:"🎗"},
+  ]},
+];
+
+const orders = [
+  {id:"2024041001",shop:"🍖 萌宠鲜食馆",status:"配送中",statusClass:"",items:["天然狗粮5斤装 x1","鸡肉冻干零食 x2"],total:126,time:"今天 11:45"},
+  {id:"2024040902",shop:"🛁 宠物美容SPA馆",status:"已完成",statusClass:"done",items:["全身美容造型 x1"],total:128,time:"昨天 15:22"},
+  {id:"2024040801",shop:"💊 萌爪宠物诊所",status:"已完成",statusClass:"done",items:["猫三联疫苗 x1","体内驱虫药 x2"],total:210,time:"04-08 12:10"},
+];
+
+const nearbyAddrs = [
+  {name:"萌宠小区", detail:"四川省成都市锦江区萌宠路88号", dist:"定位中"},
+  {name:"汪星人花园", detail:"成都市锦江区宠物街1号", dist:"约300m"},
+  {name:"喵星人公寓", detail:"成都市锦江区猫巷12号", dist:"约500m"},
+  {name:"宠物主题商圈", detail:"成都市锦江区宠乐路88号", dist:"约800m"},
+  {name:"汪汪宠物公园", detail:"成都市武侯区爱宠路22号", dist:"约1.2km"},
+  {name:"喵星广场", detail:"成都市青羊区猫咪大道66号", dist:"约2.0km"},
+  {name:"宠物友好CBD", detail:"成都市高新区萌趣街168号", dist:"约3.5km"},
+  {name:"铲屎官社区", detail:"成都市双流区养宠路33号", dist:"约4.2km"},
+];
+
+// ===================================================================
+// 状态
+// ===================================================================
+let cart = {};
+let currentShopId = 0;
+const DELIVERY_FEE = 0;
+let isLoggedIn = false;
+let currentUser = null;
+let currentLocation = { name: "萌宠小区", detail: "四川省成都市锦江区萌宠路88号" };
+let selectedPayMethod = 0;
+let pendingOrderItems = [];
+let pendingOrderTotal = 0;
+let pendingOrderNo = '';
+let codeCountdown = 0;
+let codeTimer = null;
+let bannerInterval = null;
+
+// ===================================================================
+// 时钟
+// ===================================================================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('statusTime').textContent =
+    String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===================================================================
+// Banner
+// ===================================================================
+let bannerIdx = 0;
+function startBanner() {
+  const slider = document.getElementById('bannerSlider');
+  const total = 3;
+  bannerInterval = setInterval(() => {
+    bannerIdx = (bannerIdx + 1) % total;
+    slider.style.transform = `translateX(-${bannerIdx * 100}%)`;
+    for(let i=0;i<total;i++) {
+      const d = document.getElementById('dot'+i);
+      if(d) d.classList.toggle('active', i===bannerIdx);
+    }
+  }, 3000);
+}
+
+// ===================================================================
+// Tab 切换
+// ===================================================================
+function switchTab(idx) {
+  // pages: 0=home, 1=detail, 2=community, 3=live, 4=profile
+  ['page-home','page-detail','page-community','page-live','page-profile'].forEach((p,i)=>{
+    const el = document.getElementById(p);
+    if(el) el.classList.toggle('active', i===idx);
+  });
+  // tab buttons: 0,1,2,3,4
+  [0,1,2,3,4].forEach(i=>{
+    const el = document.getElementById('tab-'+i);
+    if(el) el.classList.toggle('active', i===idx);
+  });
+  if(idx!==1) document.getElementById('cartFloat').classList.add('hidden');
+  if(idx===1) { renderShopDetail(currentShopId); updateCartFloat(); }
+  if(idx===4) renderProfilePage();
+}
+
+function goBack() {
+  switchTab(0);
+}
+
+// ===================================================================
+// 渲染首页商家列表
+// ===================================================================
+function renderShopList() {
+  document.getElementById('shopList').innerHTML = shops.map((s,i)=>`
+    <div class="shop-card" onclick="goShopDetail(${i})">
+      <div class="shop-img-placeholder" style="background:${s.bg}">${s.emoji}</div>
+      <div class="shop-info">
+        <div class="shop-name">${s.name}</div>
+        <div class="shop-rating">
+          <span class="stars">★★★★★</span>
+          <span class="rating-num">${s.rating}</span>
+          <span class="sales">月售${s.sales}</span>
+        </div>
+        <div class="shop-tags">${s.tags.map((t,ti)=>`<span class="tag ${['red','yellow','blue'][ti%3]}">${t}</span>`).join('')}</div>
+        <div class="shop-meta">
+          <span class="delivery-time">🕐 ${s.time}</span>
+          <span class="delivery-fee">配送费${s.fee}</span>
+          <span class="min-price">${s.minPrice>0?'起送¥'+s.minPrice:'免配送费'}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ===================================================================
+// 商家详情
+// ===================================================================
+function goShopDetail(idx) {
+  currentShopId = idx;
+  cart = {};
+  switchTab(1);
+}
+
+function renderShopDetail(idx) {
+  const shop = shops[idx];
+  document.getElementById('detailName').textContent = shop.name;
+  document.getElementById('detailSub').textContent = shop.desc;
+  document.getElementById('detailRating').textContent = shop.rating;
+  document.getElementById('detailSales').textContent = shop.sales;
+  document.getElementById('detailTime').textContent = shop.time;
+  document.getElementById('detailFee').textContent = shop.fee;
+  document.getElementById('detailCover').style.background = shop.bg;
+  document.getElementById('menuNav').innerHTML = shop.menuCategories.map((c,i)=>
+    `<div class="menu-nav-item ${i===0?'active':''}" onclick="scrollToCategory(${i},this)">${c}</div>`).join('');
+  let html = '';
+  shop.menuCategories.forEach((cat,ci)=>{
+    html += `<div class="menu-group-title" id="cat-${ci}">${cat}</div>`;
+    shop.menu.filter(m=>m.cat===ci).forEach(m=>{
+      const gi = shop.menu.indexOf(m);
+      const key = `${idx}_${gi}`;
+      const cnt = cart[key]||0;
+      html += `<div class="menu-item">
+        <div class="menu-item-img" style="background:#f5f0ff">${m.emoji}</div>
+        <div class="menu-item-info">
+          <div class="menu-item-name">${m.name}</div>
+          <div class="menu-item-desc">${m.desc}</div>
+          <div class="menu-item-price"><span>¥</span>${m.price}</div>
+        </div>
+        <div class="menu-item-ctrl">
+          ${cnt>0?`<button class="ctrl-btn ctrl-minus" onclick="changeCart(${idx},${gi},-1)">−</button><span class="ctrl-count">${cnt}</span>`:''}
+          <button class="ctrl-btn ctrl-plus" onclick="changeCart(${idx},${gi},1)">+</button>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('menuItems').innerHTML = html;
+  updateCartFloat();
+}
+
+function scrollToCategory(idx, el) {
+  document.querySelectorAll('.menu-nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const t = document.getElementById(`cat-${idx}`);
+  if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ===================================================================
+// 购物车
+// ===================================================================
+function changeCart(shopId, itemIdx, delta) {
+  const key = `${shopId}_${itemIdx}`;
+  cart[key] = (cart[key]||0)+delta;
+  if(cart[key]<=0) delete cart[key];
+  renderShopDetail(shopId);
+}
+
+function getCartTotal() {
+  const shop = shops[currentShopId];
+  let total=0, count=0;
+  Object.entries(cart).forEach(([key,cnt])=>{
+    const [sid,idx] = key.split('_').map(Number);
+    if(sid===currentShopId){ total+=shop.menu[idx].price*cnt; count+=cnt; }
+  });
+  return {total, count};
+}
+
+function updateCartFloat() {
+  const {total,count} = getCartTotal();
+  const shop = shops[currentShopId];
+  const f = document.getElementById('cartFloat');
+  if(count===0){ f.classList.add('hidden'); return; }
+  f.classList.remove('hidden');
+  document.getElementById('cartBadge').textContent = count;
+  document.getElementById('cartTotal').textContent = `¥${total.toFixed(2)}`;
+  const gap = Math.max(0, shop.minPrice-total);
+  const btn = document.getElementById('cartSubmit');
+  if(gap>0){
+    document.getElementById('cartGap').textContent = gap.toFixed(0);
+    btn.textContent = `差¥${gap}起送`; btn.style.background='#ccc';
+  } else {
+    document.getElementById('cartGap').textContent = '0';
+    btn.textContent = '去结算'; btn.style.background='#9333ea';
+  }
+}
+
+function showCartSheet() {
+  const shop = shops[currentShopId];
+  const {total} = getCartTotal();
+  let html = '';
+  Object.entries(cart).forEach(([key,cnt])=>{
+    const [sid,idx] = key.split('_').map(Number);
+    if(sid===currentShopId){
+      const item = shop.menu[idx];
+      html += `<div class="cart-row">
+        <span style="font-size:18px">${item.emoji}</span>
+        <span class="cart-row-name">${item.name}</span>
+        <div class="menu-item-ctrl">
+          <button class="ctrl-btn ctrl-minus" onclick="changeCart(${sid},${idx},-1);renderCartSheet()">−</button>
+          <span class="ctrl-count">${cnt}</span>
+          <button class="ctrl-btn ctrl-plus" onclick="changeCart(${sid},${idx},1);renderCartSheet()">+</button>
+        </div>
+        <span class="cart-row-price">¥${(item.price*cnt).toFixed(2)}</span>
+      </div>`;
+    }
+  });
+  document.getElementById('cartListContent').innerHTML = html || '<p style="text-align:center;color:#ccc;padding:20px">购物车是空的</p>';
+  document.getElementById('cartTotalSheet').textContent = `¥${(total+DELIVERY_FEE).toFixed(2)}`;
+  document.getElementById('cartOverlay').classList.add('show');
+}
+
+function renderCartSheet(){ showCartSheet(); updateCartFloat(); }
+
+function closeCartSheet(e){
+  if(e.target.id==='cartOverlay'){
+    document.getElementById('cartOverlay').classList.remove('show');
+    updateCartFloat();
+  }
+}
+
+function checkout(e) {
+  e.stopPropagation();
+  const {total} = getCartTotal();
+  const shop = shops[currentShopId];
+  if(total < shop.minPrice){ showToast(`还差¥${shop.minPrice-total}才能下单哦～`); return; }
+  if(!isLoggedIn){ openLoginPage(); return; }
+  document.getElementById('cartOverlay').classList.remove('show');
+  openConfirmPage();
+}
+
+// ===================================================================
+// 确认订单页
+// ===================================================================
+function openConfirmPage() {
+  const shop = shops[currentShopId];
+  const {total} = getCartTotal();
+  document.getElementById('confirmAddrName').textContent = currentLocation.name;
+  document.getElementById('confirmAddrDetail').textContent = currentLocation.detail;
+  document.getElementById('confirmShopEmoji').textContent = shop.emoji;
+  document.getElementById('confirmShopName').textContent = shop.name;
+  let html = '';
+  pendingOrderItems = [];
+  Object.entries(cart).forEach(([key,cnt])=>{
+    const [sid,idx] = key.split('_').map(Number);
+    if(sid===currentShopId){
+      const item = shop.menu[idx];
+      pendingOrderItems.push({...item, cnt});
+      html += `<div class="confirm-item-row">
+        <div class="confirm-item-left"><span class="confirm-item-emoji">${item.emoji}</span><span class="confirm-item-name">${item.name} x${cnt}</span></div>
+        <span class="confirm-item-price">¥${(item.price*cnt).toFixed(2)}</span>
+      </div>`;
+    }
+  });
+  document.getElementById('confirmItemList').innerHTML = html;
+  pendingOrderTotal = total + DELIVERY_FEE;
+  document.getElementById('confirmTotal').textContent = `¥${pendingOrderTotal.toFixed(2)}`;
+  document.getElementById('confirmFooterTotal').textContent = `¥${pendingOrderTotal.toFixed(2)}`;
+  document.getElementById('confirmETA').textContent = `约${shop.time}`;
+  document.getElementById('confirmPage').classList.add('show');
+}
+
+function closeConfirmPage() {
+  document.getElementById('confirmPage').classList.remove('show');
+}
+
+// ===================================================================
+// 支付收银台
+// ===================================================================
+function openPayPage() {
+  const shop = shops[currentShopId];
+  pendingOrderNo = 'PET' + Date.now();
+  document.getElementById('payAmount').textContent = pendingOrderTotal.toFixed(2);
+  document.getElementById('payOrderNo').textContent = pendingOrderNo;
+  document.getElementById('payShopName').textContent = shop.name;
+  document.getElementById('payAddr').textContent = currentLocation.name;
+  document.getElementById('payETA').textContent = `约${shop.time}`;
+  document.getElementById('payTotalInfo').textContent = `¥${pendingOrderTotal.toFixed(2)}`;
+  document.getElementById('confirmPage').classList.remove('show');
+  document.getElementById('payPage').classList.add('show');
+}
+
+function closePayPage() {
+  document.getElementById('payPage').classList.remove('show');
+}
+
+function selectPayMethod(idx) {
+  selectedPayMethod = idx;
+  for(let i=0;i<4;i++){
+    document.getElementById(`payRadio${i}`).classList.toggle('selected', i===idx);
+  }
+}
+
+const payMethodNames = ['微信支付','支付宝','银行卡','余额支付'];
+const payMethodIcons = ['💚','💙','💳','🏦'];
+
+function submitPay() {
+  const mask = document.getElementById('payingMask');
+  const icon = document.getElementById('payingIcon');
+  const text = document.getElementById('payingText');
+  icon.textContent = payMethodIcons[selectedPayMethod];
+  text.textContent = `${payMethodNames[selectedPayMethod]}支付中...`;
+  mask.classList.add('show');
+  setTimeout(()=>{
+    mask.classList.remove('show');
+    showPaySuccess();
+  }, 2000);
+}
+
+function showPaySuccess() {
+  const shop = shops[currentShopId];
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const etaMin = parseInt(shop.time) || 25;
+  const etaDate = new Date(now.getTime() + etaMin*60000);
+  const etaStr = `${String(etaDate.getHours()).padStart(2,'0')}:${String(etaDate.getMinutes()).padStart(2,'0')}`;
+
+  document.getElementById('successOrderNo').textContent = `订单号：${pendingOrderNo}`;
+  document.getElementById('successETA').textContent = shop.time;
+  document.getElementById('successETA2').textContent = `预计 ${etaStr} 送达`;
+  document.getElementById('stepTime1').textContent = timeStr;
+
+  orders.unshift({
+    id: pendingOrderNo,
+    shop: shop.name,
+    status: "配送中",
+    statusClass: "",
+    items: pendingOrderItems.map(i=>`${i.name} x${i.cnt}`),
+    total: pendingOrderTotal,
+    time: "刚刚"
+  });
+
+  cart = {};
+  document.getElementById('payPage').classList.remove('show');
+  document.getElementById('confirmPage').classList.remove('show');
+  document.getElementById('paySuccessPage').classList.add('show');
+  updateCartFloat();
+}
+
+function closeSuccessPage() {
+  document.getElementById('paySuccessPage').classList.remove('show');
+  switchTab(0);
+}
+
+function viewOrder() {
+  document.getElementById('paySuccessPage').classList.remove('show');
+  switchTab(2);
+}
+
+// ===================================================================
+// 订单页
+// ===================================================================
+function renderOrders(tab) {
+  const statusMap = ['', '待支付', '配送中', '已完成'];
+  let filtered = tab === 0 ? orders : orders.filter(o => o.status === statusMap[tab]);
+  const list = document.getElementById('orderList');
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">📋</div><div class="text">暂无相关订单</div></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(o => `
+    <div class="order-card">
+      <div class="order-card-header">
+        <span class="order-shop-name">${o.shop}</span>
+        <span class="order-status ${o.statusClass}">${o.status}</span>
+      </div>
+      <div class="order-items">
+        ${o.items.map(i => `<div class="order-item-row"><span>${i}</span></div>`).join('')}
+      </div>
+      <div class="order-card-footer">
+        <div>
+          <div class="order-total">合计 <strong>¥${o.total.toFixed(2)}</strong></div>
+          <div class="order-time">${o.time}</div>
+        </div>
+        <div class="order-actions">
+          <button class="order-btn outline" onclick="showToast('查看进度...')">查看进度</button>
+          <button class="order-btn primary" onclick="showToast('再来一单...')">再来一单</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function switchOrderTab(el, idx) {
+  document.querySelectorAll('.order-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderOrders(idx);
+}
+
+// ===================================================================
+// 我的页面
+// ===================================================================
+function renderProfilePage() {
+  if (isLoggedIn && currentUser) {
+    document.getElementById('profileName').textContent = currentUser;
+    document.getElementById('profilePhone').textContent = currentUser.phone ? currentUser.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '';
+    document.getElementById('loginLogoutText').textContent = '退出登录';
+    document.getElementById('profileAddrSub').textContent = currentLocation.name;
+  } else {
+    document.getElementById('profileName').textContent = '萌宠用户';
+    document.getElementById('profilePhone').textContent = '';
+    document.getElementById('loginLogoutText').textContent = '登录 / 注册';
+  }
+  document.getElementById('orderCount').textContent = orders.length;
+}
+
+// ===================================================================
+// 登录/注册
+// ===================================================================
+function openLoginPage() {
+  document.getElementById('loginPage').classList.add('show');
+}
+
+function closeLoginPage() {
+  document.getElementById('loginPage').classList.remove('show');
+}
+
+function requireLogin() {
+  if(!isLoggedIn) { openLoginPage(); }
+  else { showToast('已登录，功能开发中...'); }
+}
+
+function loginOrProfile() {
+  if(!isLoggedIn) openLoginPage();
+  else showToast('个人资料编辑开发中...');
+}
+
+function toggleLoginLogout() {
+  if(!isLoggedIn) openLoginPage();
+  else {
+    isLoggedIn = false;
+    currentUser = null;
+    renderProfilePage();
+    showToast('已退出登录');
+  }
+}
+
+function switchLoginTab(el, idx) {
+  document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('loginFormPhone').style.display = idx===0?'block':'none';
+  document.getElementById('loginFormPwd').style.display = idx===1?'block':'none';
+  document.getElementById('loginFormReg').style.display = idx===2?'block':'none';
+}
+
+function onPhoneInput() {
+  const val = document.getElementById('phoneInput').value;
+  const btn = document.getElementById('sendCodeBtn');
+  if(val.length===11 && codeCountdown===0){
+    btn.classList.remove('disabled'); btn.style.pointerEvents='auto';
+  } else {
+    btn.classList.add('disabled'); btn.style.pointerEvents='none';
+  }
+}
+
+function onRegPhoneInput() {
+  const val = document.getElementById('regPhoneInput').value;
+  const btn = document.getElementById('sendRegCodeBtn');
+  if(val.length===11 && codeCountdown===0){
+    btn.classList.remove('disabled'); btn.style.pointerEvents='auto';
+  } else {
+    btn.classList.add('disabled'); btn.style.pointerEvents='none';
+  }
+}
+
+function sendCode() {
+  if(codeCountdown>0) return;
+  const phone = document.getElementById('phoneInput').value;
+  if(phone.length!==11){ showToast('请输入正确的手机号'); return; }
+  showToast(`验证码已发送至 ${phone.slice(0,3)}****${phone.slice(7)}`);
+  startCodeCountdown('sendCodeBtn');
+  setTimeout(()=>{ document.getElementById('codeInput').value='123456'; }, 800);
+}
+
+function sendRegCode() {
+  const phone = document.getElementById('regPhoneInput').value;
+  if(phone.length!==11){ showToast('请输入正确的手机号'); return; }
+  showToast(`验证码已发送至 ${phone.slice(0,3)}****${phone.slice(7)}`);
+  startCodeCountdown('sendRegCodeBtn');
+  setTimeout(()=>{ document.getElementById('regCodeInput').value='123456'; }, 800);
+}
+
+function startCodeCountdown(btnId) {
+  codeCountdown = 60;
+  const btn = document.getElementById(btnId);
+  btn.classList.add('disabled');
+  btn.style.pointerEvents = 'none';
+  codeTimer = setInterval(()=>{
+    codeCountdown--;
+    btn.textContent = `${codeCountdown}s后重发`;
+    if(codeCountdown<=0){
+      clearInterval(codeTimer);
+      btn.textContent = '获取验证码';
+      btn.classList.remove('disabled');
+      btn.style.pointerEvents = 'auto';
+    }
+  }, 1000);
+}
+
+function togglePwd() {
+  const inp = document.getElementById('pwdInput');
+  inp.type = inp.type==='password'?'text':'password';
+}
+
+function doLogin(type) {
+  let phone = '';
+  if(type==='phone'){
+    phone = document.getElementById('phoneInput').value;
+    const code = document.getElementById('codeInput').value;
+    if(phone.length!==11){ showToast('请输入正确的手机号'); return; }
+    if(code.length!==6){ showToast('请输入6位验证码'); return; }
+  } else if(type==='pwd'){
+    phone = document.getElementById('pwdPhoneInput').value;
+    const pwd = document.getElementById('pwdInput').value;
+    if(phone.length!==11){ showToast('请输入正确的手机号'); return; }
+    if(pwd.length<6){ showToast('密码至少6位'); return; }
+  } else if(type==='reg'){
+    phone = document.getElementById('regPhoneInput').value;
+    const pwd = document.getElementById('regPwdInput').value;
+    const code = document.getElementById('regCodeInput').value;
+    if(phone.length!==11){ showToast('请输入正确的手机号'); return; }
+    if(pwd.length<6){ showToast('密码至少6位'); return; }
+    if(code.length!==6){ showToast('请输入6位验证码'); return; }
+  }
+  // 登录成功
+  isLoggedIn = true;
+  currentUser = { name: '萌宠用户', phone };
+  closeLoginPage();
+  renderProfilePage();
+  showToast('🐾 登录成功，欢迎回来！');
+}
+
+function doThirdLogin(type) {
+  const names = { wechat: '微信', alipay: '支付宝', apple: 'Apple' };
+  isLoggedIn = true;
+  currentUser = { name: '萌宠用户', phone: '' };
+  closeLoginPage();
+  renderProfilePage();
+  showToast(`${names[type]}授权成功 🐾`);
+}
+
+// ===================================================================
+// 地图定位 - 实时定位功能
+// ===================================================================
+
+// 腾讯逆地址解析（JSONP 方式 - 体验模式无需 Key）
+function geocoderByQQ(lat, lng, callback) {
+  const cbName = 'geocoder_cb_' + Date.now();
+  window[cbName] = function(data) {
+    delete window[cbName];
+    const script = document.getElementById(cbName);
+    if (script) script.remove();
+    callback(data);
+  };
+  const script = document.createElement('script');
+  script.id = cbName;
+  script.src = `https://h5gw.map.qq.com/ws/geocoder/v1/?location=${lat},${lng}&key=none&apptag=lbs_geocoder&output=jsonp&callback=${cbName}`;
+  document.head.appendChild(script);
+}
+
+// 浏览器原生定位
+function browserGeoLocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('您的浏览器不支持定位功能'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(pos),
+      (err) => reject(err),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  });
+}
+
+// 计算两点间距离（米）- 基于 Haversine 公式
+function calcDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000; // 地球半径（米）
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// 格式化距离
+function formatDistance(meters) {
+  if (meters < 1000) return Math.round(meters) + 'm';
+  return (meters / 1000).toFixed(1) + 'km';
+}
+
+// 显示定位中状态
+function showLocatingState(show) {
+  const overlay = document.getElementById('locatingOverlay');
+  const text = overlay ? overlay.querySelector('.locating-text') : null;
+  if (text) text.textContent = show ? '正在获取您的位置...' : '定位失败';
+  if (overlay) overlay.style.display = show ? 'flex' : 'none';
+}
+
+// 实时定位主函数
+async function realTimeLocation() {
+  showLocatingState(true);
+  try {
+    // 1. 获取浏览器定位
+    const pos = await browserGeoLocation();
+    const { latitude: lat, longitude: lng } = pos.coords;
+    
+    // 2. 调用腾讯逆地址解析
+    geocoderByQQ(lat, lng, (res) => {
+      if (res.status === 0) {
+        const result = res.result;
+        // 解析地址信息
+        const comp = result.ad_info;
+        const addr = result.address;
+        const recommendAddr = result.formatted_addresses?.recommend || addr;
+        
+        // 提取小区/街道名（简化处理）
+        const locationName = recommendAddr.split(',').pop()?.trim() || 
+                            recommendAddr.split('市').pop()?.trim() || 
+                            recommendAddr.split('区').pop()?.trim() || '当前位置';
+        
+        // 更新当前定位显示
+        document.getElementById('mapLocName').textContent = locationName;
+        document.getElementById('mapLocAddr').textContent = recommendAddr;
+        
+        // 3. 重新计算附近地址的距离并排序
+        const updatedAddrs = nearbyAddrs.map(a => {
+          // 估算的地址坐标（实际项目中应从服务端获取真实坐标）
+          // 这里用随机偏移模拟，实际应存储真实坐标
+          return a;
+        });
+        
+        // 按推荐排序（实际项目应根据距离排序）
+        renderMapAddresses(nearbyAddrs);
+        
+        // 保存到全局
+        currentLocation = { 
+          name: locationName, 
+          detail: recommendAddr,
+          lat: lat,
+          lng: lng
+        };
+        
+        showLocatingState(false);
+        // 定位动画
+        document.getElementById('locatingRing').style.opacity = '1';
+        setTimeout(() => {
+          document.getElementById('locatingRing').style.opacity = '0';
+        }, 1500);
+        
+        showToast('🎯 定位成功');
+      } else {
+        console.error('逆地址解析失败:', res);
+        showLocatingState(false);
+        showToast('⚠️ 定位解析失败');
+      }
+    });
+  } catch (err) {
+    console.error('定位失败:', err);
+    showLocatingState(false);
+    
+    // 根据错误类型给出提示
+    let msg = '定位失败';
+    if (err.code === 1) msg = '请允许位置权限';
+    else if (err.code === 2) msg = '定位不可用，请检查网络';
+    else if (err.code === 3) msg = '定位超时，请重试';
+    
+    showToast('⚠️ ' + msg);
+  }
+}
+
+let selectedAddrIdx = 0;
+
+function openMapPage() {
+  document.getElementById('mapPage').classList.add('show');
+  // 打开时自动进行实时定位
+  realTimeLocation();
+}
+
+function closeMapPage() {
+  document.getElementById('mapPage').classList.remove('show');
+  document.getElementById('mapSearchInput').value = '';
+}
+
+function relocate() {
+  // 点击定位按钮重新定位
+  realTimeLocation();
+}
+
+function renderMapAddresses(addrs) {
+  document.getElementById('mapAddrList').innerHTML = addrs.map((a,i)=>`
+    <div class="map-addr-item ${i===selectedAddrIdx?'selected':''}" onclick="selectAddr(${i}, '${a.name}', '${a.detail}')">
+      <div class="map-addr-dot"></div>
+      <div class="map-addr-text">
+        <div class="map-addr-name">${a.name}</div>
+        <div class="map-addr-detail">${a.detail}</div>
+      </div>
+      <div class="map-addr-dist">${a.dist}</div>
+    </div>`).join('');
+}
+
+function selectAddr(idx, name, detail) {
+  selectedAddrIdx = idx;
+  document.getElementById('mapLocName').textContent = name;
+  document.getElementById('mapLocAddr').textContent = detail;
+  renderMapAddresses(nearbyAddrs);
+}
+
+function searchAddress(val) {
+  if (!val.trim()) { renderMapAddresses(nearbyAddrs); return; }
+  const filtered = nearbyAddrs.filter(a =>
+    a.name.includes(val) || a.detail.includes(val)
+  );
+  renderMapAddresses(filtered);
+}
+
+function useCurrentLocation() {
+  currentLocation.name = document.getElementById('mapLocName').textContent;
+  currentLocation.detail = document.getElementById('mapLocAddr').textContent;
+  document.getElementById('headerLocation').textContent = currentLocation.name;
+  closeMapPage();
+  renderProfilePage();
+  showToast(`📍 已切换至 ${currentLocation.name}`);
+}
+
+// ===================================================================
+// Toast
+// ===================================================================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ===================================================================
+// 初始化
+// ===================================================================
+// ===================================================================
+// 社区分类弹窗（配种/医疗/小毛病）
+// ===================================================================
+function openCommPanel(idx) {
+  document.getElementById('commPanelModal-'+idx).classList.add('show');
+}
+function closeCommPanel(idx) {
+  document.getElementById('commPanelModal-'+idx).classList.remove('show');
+}
+
+// ===================================================================
+// 消息中心页面
+// ===================================================================
+function openMsgPage() {
+  document.getElementById('msgPageOverlay').classList.add('show');
+}
+function closeMsgPage() {
+  document.getElementById('msgPageOverlay').classList.remove('show');
+}
+function switchMsgTab(idx) {
+  for(let i=0;i<2;i++){
+    const tab = document.getElementById('msg-tab-'+i);
+    const panel = document.getElementById('msg-panel-'+i);
+    const isActive = i===idx;
+    tab.style.color = isActive ? '#9333ea' : '#999';
+    tab.style.fontWeight = isActive ? '700' : '600';
+    tab.style.borderBottom = isActive ? '2px solid #9333ea' : '2px solid transparent';
+    panel.style.display = isActive ? 'block' : 'none';
+  }
+}
+function createGroup() {
+  showToast('🎉 发起群聊功能开发中，敬请期待！');
+}
+
+// ===================================================================
+// 聊天窗口
+// ===================================================================
+const chatHistory = {};
+let currentChatUser = '';
+function openChatWindow(name, avatarText, avatarBg, isGroup) {
+  currentChatUser = name;
+  document.getElementById('chatName').textContent = name;
+  document.getElementById('chatSub').textContent = isGroup ? '群聊 · 点击查看群成员' : '在线';
+  const avatar = document.getElementById('chatAvatar');
+  avatar.textContent = avatarText;
+  avatar.style.background = avatarBg;
+  avatar.style.borderRadius = isGroup ? '10px' : '50%';
+  // 渲染历史消息
+  if(!chatHistory[name]) {
+    chatHistory[name] = isGroup ? [
+      {type:'system', text:'欢迎加入「'+name.replace(/^[🐾🐕🐱]+/,'')+'」🎉'},
+      {type:'other', name:'橘猫宝妈', text:'大家好，刚入群的新人报到！', time:'10:20'},
+      {type:'other', name:'柴犬爸爸Leo', text:'欢迎欢迎🎉', time:'10:21'},
+    ] : [
+      {type:'other', text:'你好！看到你在社区发的帖子，感觉很有共鸣～', time:'昨天'},
+      {type:'self', text:'哈哈是的，养宠物的都懂😂', time:'昨天'},
+      {type:'other', text:'有什么养宠问题可以互相交流哦！', time:'昨天'},
+    ];
+  }
+  renderChatMsgs(name);
+  document.getElementById('chatWindow').classList.add('show');
+  // 关闭消息列表页
+  // 不关闭msgPageOverlay，保持返回路径
+}
+function closeChatWindow() {
+  document.getElementById('chatWindow').classList.remove('show');
+}
+function renderChatMsgs(name) {
+  const msgs = chatHistory[name] || [];
+  const html = msgs.map(m => {
+    if(m.type === 'system') {
+      return `<div style="text-align:center;color:#bbb;font-size:12px;padding:4px 0;">${m.text}</div>`;
+    }
+    if(m.type === 'self') {
+      return `<div style="display:flex;justify-content:flex-end;gap:8px;align-items:flex-end;">
+        <div>
+          <div style="background:linear-gradient(135deg,#9333ea,#c026d3);color:#fff;border-radius:16px 16px 4px 16px;padding:10px 14px;font-size:14px;max-width:220px;line-height:1.6;word-break:break-all;">${m.text}</div>
+          <div style="text-align:right;font-size:11px;color:#bbb;margin-top:3px;">${m.time||''}</div>
+        </div>
+        <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#c026d3,#ec4899);display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;font-weight:800;flex-shrink:0;">我</div>
+      </div>`;
+    }
+    return `<div style="display:flex;gap:8px;align-items:flex-end;">
+      <div style="width:34px;height:34px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:13px;color:#666;font-weight:800;flex-shrink:0;">${(m.name||'?').slice(0,1)}</div>
+      <div>
+        ${m.name?`<div style="font-size:12px;color:#999;margin-bottom:3px;">${m.name}</div>`:''}
+        <div style="background:#fff;border-radius:16px 16px 16px 4px;padding:10px 14px;font-size:14px;max-width:220px;line-height:1.6;word-break:break-all;box-shadow:0 1px 4px rgba(0,0,0,0.08);">${m.text}</div>
+        <div style="font-size:11px;color:#bbb;margin-top:3px;">${m.time||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  const container = document.getElementById('chatMsgs');
+  container.innerHTML = html;
+  setTimeout(()=>{ container.scrollTop = container.scrollHeight; }, 50);
+}
+function sendChatMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  if(!chatHistory[currentChatUser]) chatHistory[currentChatUser] = [];
+  const now = new Date();
+  chatHistory[currentChatUser].push({type:'self', text, time: now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes()});
+  input.value = '';
+  renderChatMsgs(currentChatUser);
+  // 模拟对方回复
+  setTimeout(()=>{
+    const replies = ['收到！😊','好的，我了解了～','哈哈，太有趣了！','谢谢你的分享❤️','我也是这么觉得的！','你的宠物真可爱～🐾'];
+    chatHistory[currentChatUser].push({type:'other', text: replies[Math.floor(Math.random()*replies.length)], time: now.getHours()+':'+(now.getMinutes()<10?'0':'')+now.getMinutes()});
+    renderChatMsgs(currentChatUser);
+  }, 800 + Math.random()*600);
+}
+// 从社区帖子直接打开私信
+function openPrivateMsg(name) {
+  if(!isLoggedIn) { openLoginPage(); return; }
+  openMsgPage();
+  // 延迟确保消息页渲染后再打开聊天
+  setTimeout(()=>{
+    const avatars = {'橘猫宝妈':['喵','linear-gradient(135deg,#9333ea,#c026d3)'],'柴犬爸爸Leo':['汪','linear-gradient(135deg,#06b6d4,#0ea5e9)'],'垂耳兔小雪的妈':['兔','linear-gradient(135deg,#f59e0b,#f97316)'],'英短铲屎官':['猫','linear-gradient(135deg,#ec4899,#f43f5e)'],'张医生':['张','linear-gradient(135deg,#10b981,#059669)'],'李医生':['李','linear-gradient(135deg,#9333ea,#c026d3)'],'布偶猫配种主':['猫','linear-gradient(135deg,#fce7f3,#ede9fe)'],'柴犬配种主':['犬','linear-gradient(135deg,#d1fae5,#a7f3d0)']};
+    const info = avatars[name] || [name.slice(0,1), 'linear-gradient(135deg,#9333ea,#c026d3)'];
+    openChatWindow(name, info[0], info[1], false);
+  }, 100);
+}
+
+// ===================================================================
+// 发帖弹窗
+// ===================================================================
+function showPostModal() {
+  if(!isLoggedIn) { openLoginPage(); return; }
+  document.getElementById('postModal').classList.add('show');
+}
+function closePostModal() {
+  document.getElementById('postModal').classList.remove('show');
+}
+function addTopic(el, tag) {
+  const input = document.getElementById('postContent');
+  if(!input.value.includes(tag)) input.value += (input.value?'\n':'') + tag + ' ';
+  input.focus();
+}
+function submitPost() {
+  const text = document.getElementById('postContent').value.trim();
+  if(!text) { showToast('请输入帖子内容～'); return; }
+  closePostModal();
+  document.getElementById('postContent').value = '';
+  showToast('🎉 帖子发布成功！');
+}
+
+// ===================================================================
+// 帖子交互
+// ===================================================================
+function openPost(id) { showToast('💬 帖子详情页开发中～'); }
+function likePost(el, id) {
+  const countEl = el.querySelector('span');
+  const liked = el.dataset.liked;
+  if(liked) {
+    countEl.textContent = parseInt(countEl.textContent)-1;
+    el.dataset.liked = '';
+    el.style.opacity = '1';
+  } else {
+    countEl.textContent = parseInt(countEl.textContent)+1;
+    el.dataset.liked = '1';
+    el.style.opacity = '0.6';
+    showToast('❤️ 已点赞');
+  }
+}
+function sharePost() { showToast('↗️ 分享功能开发中～'); }
+function filterTopic(el, tag) {
+  document.querySelectorAll('.topic-filter-btn').forEach(b=>{ b.style.background=''; b.style.color=''; });
+  showToast('🔍 筛选：'+tag);
+}
+
+// ===================================================================
+// 宠物出行弹窗
+// ===================================================================
+function showPetTravel() {
+  document.getElementById('petTravelModal').classList.add('show');
+}
+function closePetTravel() {
+  document.getElementById('petTravelModal').classList.remove('show');
+}
+
+// ===================================================================
+// 真实微信登录（唤起微信 OAuth）
+// ===================================================================
+function doWechatLogin() {
+  // 弹出微信登录引导弹窗
+  document.getElementById('wechatLoginModal').classList.add('show');
+}
+function closeWechatLoginModal() {
+  document.getElementById('wechatLoginModal').classList.remove('show');
+}
+function confirmWechatLogin() {
+  // 实际项目需配置：微信公众号/小程序 AppID + redirect_uri + 后端换取 access_token
+  // 这里模拟跳转微信授权页
+  const appid = 'wx_YOUR_APPID'; // 替换为真实AppID
+  const redirect = encodeURIComponent(window.location.href);
+  const scope = 'snsapi_userinfo';
+  const state = 'wechat_login';
+  const url = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${appid}&redirect_uri=${redirect}&response_type=code&scope=${scope}&state=${state}#wechat_redirect`;
+  // 真实环境: window.location.href = url;
+  closeWechatLoginModal();
+  // 演示：直接模拟登录成功
+  isLoggedIn = true;
+  currentUser = { name: '微信用户', phone: '' };
+  document.getElementById('loginPage').classList.remove('show');
+  renderProfilePage();
+  showToast('✅ 微信授权登录成功！');
+}
+
+// ===================================================================
+// 真实微信支付（唤起支付二维码/JSAPI）
+// ===================================================================
+const _origSubmitPay = submitPay;
+// 覆盖微信支付逻辑
+function submitPay() {
+  if(selectedPayMethod === 0) {
+    // 微信支付 - 弹出支付引导
+    document.getElementById('wechatPayModal').classList.add('show');
+  } else {
+    // 其他支付走原流程
+    _origSubmitPay();
+  }
+}
+function closeWechatPayModal() {
+  document.getElementById('wechatPayModal').classList.remove('show');
+}
+function confirmWechatPay() {
+  closeWechatPayModal();
+  // 实际项目：调后端统一下单接口获取 prepay_id，前端调 wx.chooseWXPay()
+  // 演示：直接走支付成功逻辑
+  const mask = document.getElementById('payingMask');
+  const icon = document.getElementById('payingIcon');
+  const text = document.getElementById('payingText');
+  icon.textContent = '💚';
+  text.textContent = '微信支付中...';
+  mask.classList.add('show');
+  setTimeout(()=>{
+    mask.classList.remove('show');
+    openSuccessPage();
+  }, 1800);
+}
+
+// ===================================================================
+// 宠物健康卡
+// ===================================================================
+function showPetHealthCard() {
+  if(!isLoggedIn) { openLoginPage(); return; }
+  document.getElementById('petHealthCardModal').classList.add('show');
+}
+function closePetHealthCard() {
+  document.getElementById('petHealthCardModal').classList.remove('show');
+}
+function generateHealthCard() {
+  const petName = document.getElementById('hcPetName').value || '毛毛';
+  const petType = document.getElementById('hcPetType').value || '猫咪';
+  const petBreed = document.getElementById('hcPetBreed').value || '橘猫';
+  const petAge = document.getElementById('hcPetAge').value || '2岁';
+  const petWeight = document.getElementById('hcPetWeight').value || '4.5kg';
+  const petOwner = (currentUser && currentUser.name) || '铲屎官';
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const cardNo = 'HC' + Date.now().toString().slice(-8);
+  document.getElementById('hcCardResult').innerHTML = `
+    <div style="background:linear-gradient(135deg,#9333ea,#c026d3,#ec4899);border-radius:20px;padding:24px;color:#fff;position:relative;overflow:hidden;margin-top:16px;">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:100px;opacity:0.15;">🐾</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:32px;">
+          ${petType.includes('猫') ? '🐱' : petType.includes('狗') ? '🐕' : petType.includes('兔') ? '🐰' : '🐾'}
+        </div>
+        <div>
+          <div style="font-size:20px;font-weight:800;">${petName}</div>
+          <div style="font-size:13px;opacity:0.85;">${petBreed} · ${petAge} · ${petWeight}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:11px;opacity:0.7;">萌宠健康卡</div>
+          <div style="font-size:12px;font-weight:700;">${cardNo}</div>
+        </div>
+      </div>
+      <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+        <div><div style="font-size:11px;opacity:0.75;">主人</div><div style="font-weight:700;font-size:14px;">${petOwner}</div></div>
+        <div><div style="font-size:11px;opacity:0.75;">建档日期</div><div style="font-weight:700;font-size:14px;">${dateStr}</div></div>
+        <div><div style="font-size:11px;opacity:0.75;">健康评分</div><div style="font-weight:700;font-size:16px;color:#fde68a;">⭐ 98分</div></div>
+        <div><div style="font-size:11px;opacity:0.75;">下次复诊</div><div style="font-weight:700;font-size:14px;">30天后</div></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">✅ 已接种疫苗</span>
+        <span style="background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">✅ 已驱虫</span>
+        <span style="background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">✅ 体检正常</span>
+        <span style="background:rgba(255,255,255,0.2);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;">🏥 萌爪诊所认证</span>
+      </div>
+      <div style="margin-top:12px;text-align:center;font-size:11px;opacity:0.7;">🔒 萌宠生活 · 专业健康档案管理</div>
+    </div>
+  `;
+  showToast('🎉 宠物健康卡生成成功！');
+}
+
+// ===================================================================
+// 页面初始化时自动获取定位
+async function initLocation() {
+  try {
+    const pos = await browserGeoLocation();
+    const { latitude: lat, longitude: lng } = pos.coords;
+    geocoderByQQ(lat, lng, (res) => {
+      if (res.status === 0) {
+        const recommendAddr = res.result.formatted_addresses?.recommend || res.result.address;
+        const locationName = recommendAddr.split(',').pop()?.trim() || 
+                            recommendAddr.split('市').pop()?.trim() || 
+                            recommendAddr.split('区').pop()?.trim() || '当前位置';
+        currentLocation = { 
+          name: locationName, 
+          detail: recommendAddr,
+          lat: lat,
+          lng: lng
+        };
+        document.getElementById('headerLocation').textContent = currentLocation.name;
+      }
+    });
+  } catch (err) {
+    console.log('初始化定位失败，使用默认地址');
+  }
+}
+
+// 启动定位
+initLocation();
+
+renderShopList();
+renderProfilePage();
+startBanner();
+</script>
+</body>
+</html>
